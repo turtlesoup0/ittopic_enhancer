@@ -1,0 +1,422 @@
+# ITPE 도메인별 기술 용어 사전
+# Domain-specific technical terms dictionary for ITPE
+# Format: domain: {terms: [{term, priority, description, related_terms}]}
+
+# SW (소프트웨어 공학)
+SW:
+  description: "소프트웨어 공학 및 개발 관련 기술 용어"
+  terms:
+    - term: "요구사항"
+      priority: 10
+      description: "소프트웨어가 충족해야 할 조건과 능력"
+      related_terms: ["요구사항 공학", "요구사항 정의", "요구사항 분석", "기능 요구사항", "비기능 요구사항"]
+    - term: "아키텍처"
+      priority: 10
+      description: "소프트웨어 시스템의 구조와 구성 요소"
+      related_terms: ["소프트웨어 아키텍처", "시스템 아키텍처", "설계", "설계 패턴", "아키텍처 패턴"]
+    - term: "설계"
+      priority: 9
+      description: "요구사항을 구현 가능한 형태로 변환하는 과정"
+      related_terms: ["상세 설계", "기본 설계", "설계 도구", "설계 방법론", "UML"]
+    - term: "모델링"
+      priority: 8
+      description: "시스템을 모델로 표현하는 과정"
+      related_terms: ["UML", "객체 지향 모델링", "데이터 모델링", "프로세스 모델링"]
+    - term: "코딩"
+      priority: 8
+      description: "설계를 프로그래밍 언어로 구현"
+      related_terms: ["프로그래밍", "개발", "구현", "코딩 표준", "코딩 스타일"]
+    - term: "테스팅"
+      priority: 9
+      description: "소프트웨어 품질을 검증하는 과정"
+      related_terms: ["테스트", "검증", "단위 테스트", "통합 테스트", "시스템 테스트", "테스트 주도 개발"]
+    - term: "유지보수"
+      priority: 7
+      description: "소프트웨어 배포 후 수정과 개선"
+      related_terms: ["유지보수성", "소프트웨어 수명주기"]
+    - term: "리팩토링"
+      priority: 7
+      description: "외부 행위를 변경하지 않고 내부 구조 개선"
+      related_terms: ["코드 리팩토링", "설계 리팩토링", "코드 개선"]
+    - term: "CI/CD"
+      priority: 9
+      description: "지속적 통합/지속적 배포"
+      related_terms: ["지속적 통합", "지속적 배포", "빌드 자동화", "배포 자동화"]
+    - term: "애자일"
+      priority: 9
+      description: "유연한 소프트웨어 개발 방법론"
+      related_terms: ["애자일 방법론", "스크럼", "XP", "칸반", "린 개발"]
+    - term: "객체 지향"
+      priority: 9
+      description: "객체 기반 프로그래밍 패러다임"
+      related_terms: ["OOP", "캡슐화", "상속", "다형성", "추상화"]
+    - term: "디자인 패턴"
+      priority: 8
+      description: "재사용 가능한 소프트웨어 설계 해결책"
+      related_terms: ["GOF 패턴", "생성 패턴", "구조 패턴", "행위 패턴"]
+    - term: "SOLID"
+      priority: 8
+      description: "객체 지향 설계 5원칙"
+      related_terms: ["단일 책임 원칙", "개방-폐쇄 원칙", "리스코프 치환 원칙", "인터페이스 분리 원칙", "의존성 역전 원칙"]
+    - term: "마이크로서비스"
+      priority: 9
+      description: "작은 서비스들로 시스템 분해"
+      related_terms: ["MSA", "서비스 지향 아키텍처", "분산 시스템", "컨테이너"]
+
+# 정보보안 (정보 보안)
+정보보안:
+  description: "정보 보호 및 보안 관련 기술 용어"
+  terms:
+    - term: "암호화"
+      priority: 10
+      description: "데이터를 읽을 수 없는 형태로 변환"
+      related_terms: ["대칭키 암호", "공개키 암호", "AES", "RSA", "복호화", "암호 알고리즘"]
+    - term: "해시"
+      priority: 9
+      description: "고정 길이 다이제스트 생성 함수"
+      related_terms: ["해시 함수", "SHA", "MD5", "메시지 다이제스트", "일방향 함수"]
+    - term: "접근통제"
+      priority: 10
+      description: "자원 접근 권한 관리"
+      related_terms: ["인증", "인가", "ACL", "RBAC", "ABAC", "MAC", "DAC"]
+    - term: "인증"
+      priority: 10
+      description: "사용자 신원 확인"
+      related_terms: ["사용자 인증", "이중 인증", "다중 인증", "생체 인증", "JWT", "OAuth"]
+    - term: "인가"
+      priority: 9
+      description: "권한 부여 및 접근 허용"
+      related_terms: ["권한 관리", "접근 제어", "권한 부여", "역할 기반 접근 제어"]
+    - term: "해킹"
+      priority: 9
+      description: "시스템 무단 침입 행위"
+      related_terms: ["공격", "침해", "사이버 공격", "APT", "DDoS", "SQL Injection", "XSS"]
+    - term: "취약점"
+      priority: 9
+      description: "보안 약점 또는 결함"
+      related_terms: ["보안 취약점", "CVE", "Zero-day", "취약점 분석", "취약점 스캔"]
+    - term: "방화벽"
+      priority: 8
+      description: "네트워크 트래픽 필터링 시스템"
+      related_terms: ["Firewall", "WAF", "네트워크 방화벽", "호스트 방화벽", "패킷 필터"]
+    - term: "VPN"
+      priority: 8
+      description: "가상 사설망"
+      related_terms: ["가상 사설망", "IPsec", "SSL VPN", "터널링", "원격 접속"]
+    - term: "보안 감사"
+      priority: 7
+      description: "보안 상태 점검 및 평가"
+      related_terms: ["보안 평가", "보안 진단", "침투 테스트", "취약점 평가"]
+    - term: "보안 정책"
+      priority: 8
+      description: "보안 관련 규칙 및 지침"
+      related_terms: ["보안 가이드라인", "보안 표준", "ISO 27001", "보안 관리"]
+    - term: "키 관리"
+      priority: 8
+      description: "암호키 수명주기 관리"
+      related_terms: ["키 분배", "키 저장", "키 회전", "HSM", "KMS"]
+    - term: "디지털 서명"
+      priority: 8
+      description: "전자 문서의 무결성 및 인증"
+      related_terms: ["전자 서명", "서명 검증", "인증서", "공개키 기반 구조"]
+    - term: "보안 아키텍처"
+      priority: 8
+      description: "보안을 고려한 시스템 설계"
+      related_terms: ["제로 트러스트", "심층 방어", "보안 설계", "보안 패턴"]
+
+# 신기술 (AI, 블록체인 등)
+신기술:
+  description: "최신 신기술 관련 용어"
+  terms:
+    - term: "AI"
+      priority: 10
+      description: "인공지능"
+      related_terms: ["인공지능", "머신러닝", "딥러닝", "약인공지능", "강인공지능", "AGI"]
+    - term: "머신러닝"
+      priority: 10
+      description: "기계 학습"
+      related_terms: ["기계학습", "ML", "지도학습", "비지도학습", "강화학습", "특징 추출"]
+    - term: "딥러닝"
+      priority: 10
+      description: "심층 학습"
+      related_terms: ["심층학습", "DL", "신경망", "CNN", "RNN", "Transformer", "GAN"]
+    - term: "자연어 처리"
+      priority: 9
+      description: "NLP"
+      related_terms: ["NLP", "텍스트 분석", "감정 분석", "기계 번역", "챗봇", "LLM", "GPT"]
+    - term: "컴퓨터 비전"
+      priority: 9
+      description: "이미지 및 비디오 처리"
+      related_terms: ["이미지 인식", "물체 감지", "이미지 분류", "객체 인식", "OCR"]
+    - term: "블록체인"
+      priority: 10
+      description: "분산 원장 기술"
+      related_terms: ["분산원장", "암호화폐", "스마트 컨트랙트", "합의 알고리즘", "PoW", "PoS"]
+    - term: "클라우드 네이티브"
+      priority: 9
+      description: "Cloud Native"
+      related_terms: ["Cloud Native", "컨테이너", "쿠버네티스", "서비스 메시", "옵저버빌리티"]
+    - term: "엣지 컴퓨팅"
+      priority: 8
+      description: "Edge Computing"
+      related_terms: ["엣지", "MEC", "CDN", "분산 컴퓨팅", "포그 컴퓨팅"]
+    - term: "양자 컴퓨팅"
+      priority: 8
+      description: "Quantum Computing"
+      related_terms: ["양자 컴퓨터", "양자 알고리즘", "양자 암호", "양자 내성"]
+    - term: "메타버스"
+      priority: 7
+      description: "가상 세계"
+      related_terms: ["VR", "AR", "MR", "XR", "가현실", "디지털 트윈"]
+    - term: "5G"
+      priority: 9
+      description: "5세대 이동통신"
+      related_terms: ["5G 네트워크", "네트워크 슬라이싱", "URLLC", "mMTC", "eMBB"]
+    - term: "RPA"
+      priority: 8
+      description: "로봇 프로세스 자동화"
+      related_terms: ["로봇 자동화", "업무 자동화", "디지털 워커"]
+    - term: "제로 트러스트 아키텍처"
+      priority: 8
+      description: "Zero Trust Architecture"
+      related_terms: ["제로 트러스트", "신뢰 없는 보안", "상시 검증"]
+    - term: "Serverless"
+      priority: 8
+      description: "서버리스 컴퓨팅"
+      related_terms: ["FaaS", "Lambda", "클라우드 함수", "이벤트 기반"]
+
+# 네트워크 (네트워크 기술)
+네트워크:
+  description: "네트워크 및 통신 관련 기술 용어"
+  terms:
+    - term: "OSI 7계층"
+      priority: 10
+      description: "OSI 7 Layer 참조 모델"
+      related_terms: ["OSI", "물리계층", "데이터링크계층", "네트워크계층", "전송계층", "세션계층", "표현계층", "응용계층"]
+    - term: "TCP/IP"
+      priority: 10
+      description: "인터넷 프로토콜 슈트"
+      related_terms: ["TCP", "IP", "UDP", "ICMP", "ARP", "4계층", "3계층"]
+    - term: "라우터"
+      priority: 9
+      description: "3계층 패킷 전달 장치"
+      related_terms: ["Router", "라우팅", "라우팅 테이블", "정적 라우팅", "동적 라우팅", "RIP", "OSPF", "BGP"]
+    - term: "스위치"
+      priority: 9
+      description: "2계층 프레임 전달 장치"
+      related_terms: ["Switch", "L2 스위치", "L3 스위치", "MAC 주소", "VLAN", "스패닝 트리"]
+    - term: "서브넷"
+      priority: 8
+      description: "네트워크 분할"
+      related_terms: ["서브넷 마스크", "CIDR", "IP 주소", "네트워크 주소", "브로드캐스트 도메인"]
+    - term: "DHCP"
+      priority: 8
+      description: "동적 호스트 설정 프로토콜"
+      related_terms: ["Dynamic Host Configuration Protocol", "IP 할당", "DHCP 서버", "DHCP 릴레이"]
+    - term: "DNS"
+      priority: 9
+      description: "도메인 네임 시스템"
+      related_terms: ["Domain Name System", "도메인", "네임 서버", "DNS 레코드", "A 레코드", "NS 레코드"]
+    - term: "NAT"
+      priority: 8
+      description: "네트워크 주소 변환"
+      related_terms: ["Network Address Translation", "PAT", "IP 변환", "사설 IP", "공인 IP"]
+    - term: "VPN"
+      priority: 8
+      description: "가상 사설망"
+      related_terms: ["Virtual Private Network", "IPsec", "SSL VPN", "터널링", "VPN 프로토콜"]
+    - term: "방화벽"
+      priority: 8
+      description: "Firewall"
+      related_terms: ["Firewall", "패킷 필터", "상태 검사", "WAF", "네트워크 보안"]
+    - term: "로드 밸런서"
+      priority: 8
+      description: "Load Balancer"
+      related_terms: ["LB", "부하 분산", "라운드 로빈", "L4 로드밸런싱", "L7 로드밸런싱"]
+    - term: "CDN"
+      priority: 8
+      description: "콘텐츠 전송 네트워크"
+      related_terms: ["Content Delivery Network", "엣지 서버", "캐싱", "컨텐츠 분산"]
+    - term: "QoS"
+      priority: 7
+      description: "서비스 품질"
+      related_terms: ["Quality of Service", "트래픽 제어", "대역폭 보장", "우선순위"]
+    - term: "SDN"
+      priority: 8
+      description: "소프트웨어 정의 네트워킹"
+      related_terms: ["Software Defined Network", "OpenFlow", "네트워크 가상화", "컨트롤 플레인"]
+
+# 데이터베이스 (데이터베이스 기술)
+데이터베이스:
+  description: "데이터베이스 관련 기술 용어"
+  terms:
+    - term: "SQL"
+      priority: 10
+      description: "구조화 질의 언어"
+      related_terms: ["Structured Query Language", "DML", "DDL", "DCL", "SELECT", "JOIN", "데이터 조작"]
+    - term: "NoSQL"
+      priority: 9
+      description: "비관계형 데이터베이스"
+      related_terms: ["비관계형 DB", "MongoDB", "Redis", "Cassandra", "문서 기반", "키-값", "컬럼 패밀리"]
+    - term: "ACID"
+      priority: 10
+      description: "트랜잭션 4속성"
+      related_terms: ["원자성", "일관성", "고립성", "지속성", "트랜잭션"]
+    - term: "트랜잭션"
+      priority: 9
+      description: "데이터베이스 작업 단위"
+      related_terms: ["COMMIT", "ROLLBACK", "트랜잭션 격리수준", "동시성 제어"]
+    - term: "정규화"
+      priority: 9
+      description: "데이터 중복 최소화 설계"
+      related_terms: ["제1정규형", "제2정규형", "제3정규형", "BCNF", "정규화 과정"]
+    - term: "인덱스"
+      priority: 9
+      description: "검색 성능 향상 구조"
+      related_terms: ["색인", "B-Tree", "해시 인덱스", "클러스터드 인덱스", "비클러스터드 인덱스"]
+    - term: "PK"
+      priority: 10
+      description: "기본 키"
+      related_terms: ["Primary Key", "기본키", "Unique", "후보 키", "슈퍼 키"]
+    - term: "FK"
+      priority: 9
+      description: "외래 키"
+      related_terms: ["Foreign Key", "외래키", "참조 무결성", "관계"]
+    - term: "ERD"
+      priority: 8
+      description: "개체 관계 다이어그램"
+      related_terms: ["Entity Relationship Diagram", "개체", "관계", "속성", "카디널리티"]
+    - term: "조인"
+      priority: 9
+      description: "테이블 결합 연산"
+      related_terms: ["JOIN", "내부 조인", "외부 조인", "자연 조인", "카테시안 곱"]
+    - term: "뷰"
+      priority: 7
+      description: "가상 테이블"
+      related_terms: ["VIEW", "가상 테이블", "머터리얼라이즈드 뷰", "인라인 뷰"]
+    - term: "커서"
+      priority: 7
+      description: "행 단위 처리"
+      related_terms: ["Cursor", "암시적 커서", "명시적 커서", "행 단위 조작"]
+    - term: "DBMS"
+      priority: 10
+      description: "데이터베이스 관리 시스템"
+      related_terms: ["데이터베이스 관리시스템", "RDBMS", "ORDBMS", "데이터베이스 엔진"]
+    - term: "샤딩"
+      priority: 8
+      description: "데이터 분산 저장"
+      related_terms: ["Sharding", "파티셔닝", "수평 분할", "분산 데이터베이스", "스케일 아웃"]
+    - term: "복제"
+      priority: 8
+      description: "데이터 복사"
+      related_terms: ["Replication", "마스터-슬레이브", "Failover", "HA", "데이터 동기화"]
+    - term: "ORM"
+      priority: 8
+      description: "객체 관계 매핑"
+      related_terms: ["Object Relational Mapping", "SQLAlchemy", "Hibernate", "JPA", "객체 매핑"]
+
+# 복합어 보존 목록 (공백, 슬래시, 하이픈 포함)
+# P2-KOREAN 처리 시 복합어 보존을 위한 설정
+복합어:
+  description: "분리하면 안 되는 기술 용어 복합어"
+  terms:
+    - term: "TCP/IP"
+      category: "네트워크"
+    - term: "OSI 7계층"
+      category: "네트워크"
+    - term: "L2 스위치"
+      category: "네트워크"
+    - term: "L3 스위치"
+      category: "네트워크"
+    - term: "REST API"
+      category: "SW"
+    - term: "RESTful API"
+      category: "SW"
+    - term: "CI/CD"
+      category: "SW"
+    - term: "OAuth 2.0"
+      category: "정보보안"
+    - term: "SQL Injection"
+      category: "정보보안"
+    - term: "Cross-Site Scripting"
+      category: "정보보안"
+    - term: "Man-in-the-Middle"
+      category: "정보보안"
+    - term: "Public Key Infrastructure"
+      category: "정보보안"
+    - term: "Software Defined Network"
+      category: "네트워크"
+    - term: "Quality of Service"
+      category: "네트워크"
+    - term: "Service Oriented Architecture"
+      category: "SW"
+    - term: "Micro Service Architecture"
+      category: "SW"
+    - term: "User Interface"
+      category: "SW"
+    - term: "User Experience"
+      category: "SW"
+    - term: "Single Sign-On"
+      category: "정보보안"
+    - term: "Multi-Factor Authentication"
+      category: "정보보안"
+    - term: "Virtual Private Network"
+      category: "정보보안"
+    - term: "Internet of Things"
+      category: "신기술"
+    - term: "Machine Learning"
+      category: "신기술"
+    - term: "Deep Learning"
+      category: "신기술"
+    - term: "Natural Language Processing"
+      category: "신기술"
+    - term: "Computer Vision"
+      category: "신기술"
+    - term: "Operating System"
+      category: "SW"
+    - term: "Database Management System"
+      category: "데이터베이스"
+    - term: "Structured Query Language"
+      category: "데이터베이스"
+    - term: "Entity Relationship Diagram"
+      category: "데이터베이스"
+    - term: "Graphical User Interface"
+      category: "SW"
+    - term: "Integrated Development Environment"
+      category: "SW"
+    - term: "Application Programming Interface"
+      category: "SW"
+    - term: "Content Delivery Network"
+      category: "네트워크"
+    - term: "Voice over IP"
+      category: "네트워크"
+    - term: "Radio Frequency Identification"
+      category: "신기술"
+    - term: "Near Field Communication"
+      category: "신기술"
+    - term: "Augmented Reality"
+      category: "신기술"
+    - term: "Virtual Reality"
+      category: "신기술"
+    - term: "Mixed Reality"
+      category: "신기술"
+    - term: "Software as a Service"
+      category: "신기술"
+    - term: "Platform as a Service"
+      category: "신기술"
+    - term: "Infrastructure as a Service"
+      category: "신기술"
+    - term: "Function as a Service"
+      category: "신기술"
+    - term: "Disaster Recovery"
+      category: "SW"
+    - term: "Business Continuity Planning"
+      category: "SW"
+    - term: "Service Level Agreement"
+      category: "SW"
+    - term: "Mean Time Between Failures"
+      category: "SW"
+    - term: "Mean Time To Repair"
+      category: "SW"
+    - term: "Single Point of Failure"
+      category: "SW"

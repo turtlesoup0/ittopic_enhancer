@@ -1,0 +1,285 @@
+version: 1.0.0
+last_updated: '2026-02-02'
+field_completeness:
+  리드문:
+    required: true
+    min_length: 30
+    max_length: 200
+    description: 토픽의 핵심을 1-2문장으로 요약
+    validation:
+    - type: contains_key_concept
+      weight: 0.4
+    - type: sentence_structure
+      weight: 0.3
+    - type: technical_depth
+      level: 기술사_수준
+      weight: 0.3
+  정의:
+    required: true
+    min_length: 50
+    max_length: 500
+    description: 기술사 시험 수준의 정확한 정의
+    validation:
+    - type: technical_accuracy
+      reference_match_threshold: 0.8
+      weight: 0.5
+    - type: completeness
+      required_elements:
+      - 목적/기능
+      - 핵심_특징
+      - 적용_분야
+      weight: 0.3
+    - type: standard_compliance
+      check_standards:
+      - ISO/IEC
+      - IEEE
+      - RFC
+      weight: 0.2
+  키워드:
+    required: true
+    min_count: 3
+    max_count: 10
+    description: 기술 용어 중심
+    validation:
+    - type: technical_terms_ratio
+      min_ratio: 0.7
+      weight: 0.4
+    - type: domain_relevance
+      check_domain: true
+      weight: 0.3
+    - type: exam_frequency
+      prefer_high_frequency: true
+      weight: 0.3
+  해시태그:
+    required: true
+    min_count: 1
+    description: 도메인 분류용
+    validation:
+    - type: domain_classification
+      valid_domains:
+      - 신기술
+      - 정보보안
+      - 빅데이터&인공지능
+      - SW
+      - 경영/IT관리
+      - 데이터베이스
+      - 네트워크
+      - CA_OS
+      - 알고리즘_자료구조
+      weight: 1.0
+  암기:
+    required: true
+    min_length: 50
+    description: 시험 대상 핵심 내용
+    validation:
+    - type: exam_relevance
+      priority: 필수
+      weight: 0.5
+    - type: structured_format
+      preferred_formats:
+      - bullet_points
+      - numbered_list
+      - comparison_table
+      weight: 0.3
+    - type: key_points_coverage
+      min_key_points: 3
+      weight: 0.2
+content_accuracy:
+  reference_match:
+    threshold: 0.7
+    description: 참조 문서와의 의미적 일치도
+  technical_term_accuracy:
+    threshold: 0.9
+    description: 기술 용어 정확성
+    penalty:
+      incorrect_term: 1.0
+      ambiguous_term: 0.5
+      outdated_term: 0.3
+  fact_consistency:
+    check_contradictions: true
+    check_outdated_info: true
+    outdated_penalty: 0.3
+  similarity:
+    inaccurate_threshold: 0.6
+    needs_improvement_threshold: 0.8
+    description: 임베딩 유사도 기반 정확도 분류
+priority_scoring:
+  critical:
+    triggers:
+    - condition: 정의_누락
+      score: 100
+    - condition: 핵심_기술_오류
+      score: 100
+    - condition: 시험_필수_내용_누락
+      score: 95
+    description: 즉시 수정 필요
+  high:
+    triggers:
+    - condition: 키워드_부족
+      min_count: 2
+      score: 80
+    - condition: 리드문_부재
+      score: 75
+    - condition: 기술_설명_불충분
+      score: 70
+    description: 우선 수정 권장
+  medium:
+    triggers:
+    - condition: 예시_부족
+      score: 50
+    - condition: 암기_내용_미정리
+      score: 45
+    - condition: 최신_트렌드_미반영
+      score: 40
+    description: 개선 권장
+  low:
+    triggers:
+    - condition: 서술_개선_여지
+      score: 20
+    - condition: 추가_정보_가능
+      score: 15
+    description: 선택적 개선
+domain_specific_rules:
+  네트워크:
+    required_elements:
+    - 프로토콜/표준
+    - 동작_원리
+    - 장단점
+    - 적용_사례
+    technical_depth: 상세
+    diagram_preference: true
+  정보보안:
+    required_elements:
+    - 위협_유형
+    - 대응_방안
+    - 관련_표준
+    - 구현_기술
+    technical_depth: 매우_상세
+    compliance_check: true
+  SW공학:
+    required_elements:
+    - 정의/목적
+    - 프로세스/단계
+    - 산출물
+    - 적용_방법론
+    technical_depth: 상세
+    example_preference: true
+  데이터베이스:
+    required_elements:
+    - 개념/구조
+    - 동작_원리
+    - 장단점
+    - 적용_시나리오
+    technical_depth: 상세
+    sql_example: true
+  신기술:
+    required_elements:
+    - 기술_배경
+    - 핵심_기능
+    - 기존_기술과_차별점
+    - 전망/과제
+    technical_depth: 중간
+    trend_analysis: true
+quality_scoring:
+  weights:
+    field_completeness: 0.3
+    content_accuracy: 0.4
+    reference_coverage: 0.2
+    technical_depth: 0.1
+  thresholds:
+    excellent: 0.9
+    good: 0.75
+    acceptable: 0.6
+    needs_improvement: 0.4
+    poor: 0.0
+reference_trust_scores:
+  FB21_수험서:
+    base_score: 1.0
+    description: 공식 수험서
+    authority: highest
+  기술사_교재:
+    base_score: 0.95
+    description: 전문 교재
+    authority: high
+  기술_표준:
+    base_score: 1.0
+    examples:
+    - ISO/IEC
+    - IEEE
+    - RFC
+    - ITU-T
+    authority: highest
+  전문_블로그:
+    base_score: 0.8
+    description: 전문가 블로그
+    authority: medium
+    quality_check_required: true
+  위키:
+    base_score: 0.6
+    description: 위키백과 등
+    authority: low
+    verification_required: true
+exam_frequency_weights:
+  always:
+    weight: 1.0
+    description: 매년 출제
+  frequent:
+    weight: 0.8
+    description: 최근 3년 내 2회 이상
+  occasional:
+    weight: 0.5
+    description: 최근 5년 내 출제
+  rare:
+    weight: 0.2
+    description: 간헐적 출제
+auto_enhancement:
+  enabled: true
+  rules:
+  - condition: 정의_부재
+    action: 참조_문서_에서_정의_추천
+    auto_suggest: false
+  - condition: 키워드_부족
+    action: 기술_용어_자동_추출
+    auto_suggest: true
+  - condition: 최신_정보_누락
+    action: 최신_트렌드_추가_제안
+    auto_suggest: false
+validation_exceptions:
+  skip_fields:
+  - field: 암기
+    condition: 토픽_복잡도_낮음
+    reason: 단순_개념은_암기_필요_없음
+  tolerance:
+    field: 리드문
+    max_length_tolerance: 1.2
+feedback_learning:
+  enabled: true
+  metrics:
+  - user_acceptance_rate
+  - proposal_quality_score
+  - application_success_rate
+  auto_adjust:
+    threshold: 0.8
+    description: 사용자 수용율이 80% 이상이면 규칙 강화
+notification_rules:
+  notify_on:
+  - event: critical_gap_detected
+    channels:
+    - email
+    - dashboard
+  - event: validation_completed
+    channels:
+    - dashboard
+  - event: proposal_generated
+    channels:
+    - dashboard
+  summary_schedule:
+    daily: true
+    weekly: true
+    monthly: true
+coverage_scoring:
+  log_scale:
+    high_quality_weight: 0.3
+    medium_quality_weight: 0.2
+    formula: min(1.0, 0.3 * log2(1 + high) + 0.2 * log2(1 + medium))
+    description: 로그 스케일링을 통한 포화 방지 (다수의 매치 참조 고려)

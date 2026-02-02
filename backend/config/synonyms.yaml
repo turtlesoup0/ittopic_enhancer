@@ -1,0 +1,292 @@
+# ITPE 도메인별 동의어 매핑
+# Synonym mapping for ITPE domain keywords
+# Format: primary_term: [synonym1, synonym2, ...]
+
+# Network (네트워크)
+네트워크:
+  - NW
+  - 망
+  - network
+  - Network
+TCP/IP:
+  - TCP IP
+  - TCPIP
+  - tcpip
+OSI 7계층:
+  - OSI
+  - OSI 7 Layer
+  - OSI 7 Layer
+  - OSI 7층
+라우터:
+  - Router
+  - 공유기
+  - 라우팅
+스위치:
+  - Switch
+  - L2 스위치
+  - L3 스위치
+  - L2 Switch
+  - L3 Switch
+
+# Database (데이터베이스)
+데이터베이스:
+  - DB
+  - DBMS
+  - database
+  - Database
+  - 데이타베이스
+SQL:
+  - Structured Query Language
+  - 쿼리
+  - Query
+NoSQL:
+  - No SQL
+  - No-SQL
+  - 비관계형
+  - 비관계형 DB
+ACID:
+  - 트랜잭션
+  - Transaction
+  - 일관성
+  - 원자성
+  - 고립성
+  - 지속성
+
+# Software (소프트웨어/SW)
+소프트웨어:
+  - SW
+  - Software
+  - 프로그램
+  - Program
+아키텍처:
+  - Architecture
+  - 설계
+  - 구조
+  - 설계 구조
+요구사항:
+  - 요구 공학
+  - Requirements
+  - Requirement
+  - 요구 정의
+
+# Security (정보보안)
+정보보안:
+  - Security
+  - 보안
+  - 시큐리티
+암호화:
+  - Encryption
+  - 암호
+  - 복호화
+  - Decryption
+해킹:
+  - Hacking
+  - 침해
+  - 공격
+  - Attack
+접근통제:
+  - Access Control
+  - 권한 관리
+  - 인가
+  - Authorization
+CIA:
+  - 기밀성
+  - 무결성
+  - 가용성
+  - Confidentiality
+  - Integrity
+  - Availability
+
+# AI/ML (인공지능)
+인공지능:
+  - AI
+  - Artificial Intelligence
+  - AI 기술
+머신러닝:
+  - Machine Learning
+  - ML
+  - 기계학습
+딥러닝:
+  - Deep Learning
+  - 심층학습
+  - DL
+신경망:
+  - Neural Network
+  - NN
+  - 인공신경망
+블록체인:
+  - Blockchain
+  - 분산원장
+
+# Project Management (프로젝트 관리)
+프로젝트:
+  - Project
+  - 사업
+  - 과제
+애자일:
+  - Agile
+  - 애자일 방법론
+  - 스크럼
+  - XP
+스크럼:
+  - Scrum
+  - 애자일 스크럼
+관리:
+  - Management
+  - 운영
+  - 유지보수
+기획:
+  - Planning
+  - 계획
+  - 설계
+
+# REST API
+REST API:
+  - RESTful API
+  - RESTful
+  - REST
+  - RESTful 웹 서비스
+API:
+  - Application Programming Interface
+  - 인터페이스
+  - 웹 API
+  - Web API
+
+# Web (웹)
+웹:
+  - Web
+  - 웹사이트
+  - Website
+프론트엔드:
+  - Front-end
+  - Frontend
+  - FE
+백엔드:
+  - Back-end
+  - Backend
+  - BE
+풀스택:
+  - Full Stack
+  - Fullstack
+  - 프론트엔드 백엔드
+
+# Cloud (클라우드)
+클라우드:
+  - Cloud
+  - Cloud Computing
+IaaS:
+  - Infrastructure as a Service
+  - 인프라형 서비스
+PaaS:
+  - Platform as a Service
+  - 플랫폼형 서비스
+SaaS:
+  - Software as a Service
+  - 소프트웨어형 서비스
+
+# DevOps
+DevOps:
+  - 데브옵스
+  - Dev Ops
+CI/CD:
+  - Continuous Integration
+  - Continuous Deployment
+  - 지속적 통합
+  - 지속적 배포
+  - CI CD
+도커:
+  - Docker
+  - 컨테이너
+  - Container
+쿠버네티스:
+  - Kubernetes
+  - K8s
+  - 쿠베
+
+# Testing (테스트)
+테스트:
+  - Test
+  - 검증
+  - Testing
+단위 테스트:
+  - Unit Test
+  - 유닛 테스트
+통합 테스트:
+  - Integration Test
+  - 통합 검증
+시스템 테스트:
+  - System Test
+  - 시스템 검증
+TDD:
+  - Test Driven Development
+  - 테스트 주도 개발
+
+# Mobile (모바일)
+모바일:
+  - Mobile
+  - 모바일 앱
+  - Mobile App
+안드로이드:
+  - Android
+  - 안드로이드 앱
+iOS:
+  - iOS
+  - 아이폰
+  - 아이패드
+하이브리드 앱:
+  - Hybrid App
+  - 크로스 플랫폼
+  - Cross Platform
+
+# Big Data (빅데이터)
+빅데이터:
+  - Big Data
+  - 대용량 데이터
+  - 빅데이터 분석
+데이터 마이닝:
+  - Data Mining
+  - 데이터 마이닝
+  - 데이터 분석
+데이터 웨어하우스:
+  - Data Warehouse
+  - DW
+  - 데이터 창고
+
+# IoT (사물인터넷)
+사물인터넷:
+  - IoT
+  - Internet of Things
+  - 사물 인터넷
+센서:
+  - Sensor
+  - 감지기
+임베디드:
+  - Embedded
+  - 임베디드 시스템
+  - 내장형
+
+# Version Control (버전 관리)
+Git:
+  - git
+  - 깃
+  - 버전 관리
+  - Version Control
+GitHub:
+  - 깃허브
+  - Git Hub
+GitLab:
+  - 깃랩
+  - Git Lab
+브랜치:
+  - Branch
+  - 가지
+커밋:
+  - Commit
+  - 제출
+머지:
+  - Merge
+  - 병합
+PR:
+  - Pull Request
+  - 풀 리퀘스트
+  - 머지 리퀘스트
