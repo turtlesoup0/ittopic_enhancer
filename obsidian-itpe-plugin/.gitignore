@@ -1,0 +1,24 @@
+# Node modules
+node_modules/
+
+# Build output
+main.js
+*.js.map
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Obsidian
+.obsidian/
+
+# Test files
+itpe-topics.json
+제안-*.md

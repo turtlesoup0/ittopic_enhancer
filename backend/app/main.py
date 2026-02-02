@@ -4,15 +4,19 @@ from pathlib import Path
 from typing import Optional
 from collections import defaultdict
 from time import time
+from datetime import datetime
 
-from fastapi import FastAPI, HTTPException, Query, Request, status
+import redis
+from sqlalchemy import text
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.api import api_router
 from app.core.config import get_settings
 from app.core.logging import get_logger
-from app.db.session import init_db, close_db
+from app.db.session import init_db, close_db, get_db
 
 settings = get_settings()
 logger = get_logger(__name__)
@@ -228,9 +232,45 @@ async def root():
 
 
 @app.get("/health")
-async def health():
-    """Health check endpoint."""
-    return {"status": "healthy", "version": settings.app_version}
+async def health(db: AsyncSession = Depends(get_db)):
+    """
+    Health check endpoint with database connectivity verification.
+
+    Returns:
+        Health status with database connection check and timestamp
+    """
+    health_status = {
+        "status": "healthy",
+        "version": settings.app_version,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    # Check database connectivity
+    try:
+        # Execute simple query to verify database connection
+        result = await db.execute(text("SELECT 1"))
+        result.scalar()
+        health_status["database"] = "connected"
+    except Exception as e:
+        logger.error("database_health_check_failed", error=str(e))
+        health_status["database"] = "disconnected"
+        health_status["status"] = "unhealthy"
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content=health_status,
+        )
+
+    # Check Redis connectivity (if enabled)
+    if settings.cache_enabled and settings.cache_backend == "redis":
+        try:
+            redis_client = redis.from_url(settings.redis_url)
+            redis_client.ping()
+            health_status["cache"] = "connected"
+        except Exception as e:
+            logger.warning("redis_health_check_failed", error=str(e))
+            health_status["cache"] = "disconnected"
+
+    return health_status
 
 
 @app.exception_handler(Exception)

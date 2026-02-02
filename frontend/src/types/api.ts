@@ -6,6 +6,8 @@ export type DomainEnum =
   | 'SW'
   | '프로젝트관리'
 
+export type ExamFrequencyEnum = 'high' | 'medium' | 'low'
+
 export interface Topic {
   id: string
   metadata: {
@@ -13,6 +15,7 @@ export interface Topic {
     file_name: string
     folder: string
     domain: DomainEnum
+    exam_frequency: ExamFrequencyEnum
   }
   content: {
     리드문: string
@@ -32,6 +35,33 @@ export interface Topic {
   last_validated?: string
   created_at: string
   updated_at: string
+}
+
+export interface TopicCreate {
+  file_path: string
+  file_name: string
+  folder: string
+  domain: DomainEnum
+  exam_frequency?: ExamFrequencyEnum
+  리드문?: string
+  정의?: string
+  키워드?: string[]
+  해시태그?: string
+  암기?: string
+}
+
+export interface TopicListResponse {
+  topics: Topic[]
+  total: number
+  page: number
+  size: number
+}
+
+export interface DomainStats {
+  domain: DomainEnum
+  total_topics: number
+  completed_count: number
+  completion_rate: number
 }
 
 export interface ValidationResult {
@@ -90,6 +120,28 @@ export interface Proposal {
 
 export interface ValidationTask {
   task_id: string
-  status: string
+  status: 'queued' | 'processing' | 'completed' | 'failed'
   estimated_time: number
+}
+
+export interface ValidationTaskStatus {
+  task_id: string
+  status: string
+  progress: number
+  total: number
+  current: number
+  error?: string
+  results?: ValidationResult[]
+}
+
+export interface ProposalListResponse {
+  proposals: Proposal[]
+  total: number
+  topic_id: string
+}
+
+export interface UploadResponse {
+  uploaded_count: number
+  failed_count: number
+  topic_ids: string[]
 }

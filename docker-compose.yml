@@ -1,0 +1,182 @@
+# Docker Compose configuration for ITPE Topic Enhancement Staging Environment
+# PostgreSQL + Redis + Backend + Frontend services
+
+services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:16-alpine
+    container_name: itpe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-itpe}
+      POSTGRES_USER: ${POSTGRES_USER:-itpe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-itpe} -d ${POSTGRES_DB:-itpe}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - itpe-network
+
+  # Redis Cache Service
+  redis:
+    image: redis:7-alpine
+    container_name: itpe-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - itpe-network
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: itpe-backend
+    restart: unless-stopped
+    environment:
+      # Application
+      APP_NAME: ${APP_NAME:-ITPE Topic Enhancement}
+      APP_VERSION: ${APP_VERSION:-1.0.0}
+      DEBUG: ${DEBUG:-false}
+
+      # Database (PostgreSQL)
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-itpe}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-itpe}
+
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+
+      # Celery
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/1
+
+      # CORS
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://frontend:3000}
+
+      # OpenAI (optional)
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+
+      # Ollama (optional)
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+
+      # Obsidian Paths (mount volumes if needed)
+      OBSIDIAN_VAULT_PATH: ${OBSIDIAN_VAULT_PATH:-/data/obsidian/vault}
+      OBSIDIAN_EXPORT_PATH: ${OBSIDIAN_EXPORT_PATH:-/data/obsidian/export}
+      FB21_BOOKS_PATH: ${FB21_BOOKS_PATH:-/data/fb21-books}
+
+      # ChromaDB
+      CHROMADB_PATH: ${CHROMADB_PATH:-/data/chromadb}
+
+      # Validation Rules
+      VALIDATION_RULES_PATH: ${VALIDATION_RULES_PATH:-/app/config/validation_rules.yaml}
+    volumes:
+      - ./backend/data:/app/data
+      - obsidian_vault:/data/obsidian
+      - fb21_books:/data/fb21-books
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - itpe-network
+
+  # Frontend Service (optional - for local testing)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: itpe-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - itpe-network
+
+  # Celery Worker (optional - for background tasks)
+  celery-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: itpe-celery-worker
+    restart: unless-stopped
+    command: celery -A app.services.llm.worker worker --loglevel=info --concurrency=2
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-itpe}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-itpe}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/1
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+    volumes:
+      - ./backend/data:/app/data
+      - obsidian_vault:/data/obsidian
+      - fb21_books:/data/fb21-books
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - itpe-network
+
+  # Ollama Service (optional - for local LLM inference)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: itpe-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+    ports:
+      - "11434:11434"
+    environment:
+      OLLAMA_MODELS: ${OLLAMA_MODELS:-llama3.1:8b}
+    networks:
+      - itpe-network
+
+# Named volumes for data persistence
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  obsidian_vault:
+    driver: local
+  fb21_books:
+    driver: local
+  ollama_data:
+    driver: local
+
+# Network configuration
+networks:
+  itpe-network:
+    driver: bridge

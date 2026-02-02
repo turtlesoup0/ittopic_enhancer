@@ -109,8 +109,15 @@ logs/
 # ===========================================
 # Environment files
 .env
-.env.*
+.env.local
+.env.*.local
+# Keep example files
 !.env.example
+!.env.*.example
+!.env.development
+# But ignore production and staging actual configs
+.env.production
+.env.staging
 
 # Certificate files
 *.pem
