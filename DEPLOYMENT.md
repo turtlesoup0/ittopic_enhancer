@@ -313,7 +313,8 @@ uvicorn app.main:app --reload
 docker-compose up -d postgres redis
 
 # Run backend locally with connected database
-export DATABASE_URL=postgresql+asyncpg://itpe:dev_password@localhost:5432/itpe
+# .env.development 파일에서 POSTGRES_PASSWORD를 설정하세요
+export DATABASE_URL=postgresql+asyncpg://itpe:${POSTGRES_PASSWORD}@localhost:5432/itpe
 cd backend
 uvicorn app.main:app --reload
 ```
@@ -327,7 +328,8 @@ pytest
 
 # Run tests with PostgreSQL
 docker-compose up -d postgres
-export DATABASE_URL=postgresql+asyncpg://itpe:dev_password@localhost:5432/itpe
+# .env.development 파일에서 POSTGRES_PASSWORD를 설정하세요
+export DATABASE_URL=postgresql+asyncpg://itpe:${POSTGRES_PASSWORD}@localhost:5432/itpe
 pytest
 ```
 

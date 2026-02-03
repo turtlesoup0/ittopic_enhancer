@@ -1,14 +1,17 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
-const API_KEY = import.meta.env.VITE_API_KEY || ''
+// 중앙화된 환경설정 모듈 사용
+// import.meta.env를 직접 사용하는 것은 보안상 권장하지 않습니다
+import { getEnvConfig } from './envConfig'
+
+const config = getEnvConfig()
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: config.apiBaseUrl,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
-    ...(API_KEY && { 'X-API-Key': API_KEY }),
+    ...(config.apiKey && { 'X-API-Key': config.apiKey }),
   },
 })
 

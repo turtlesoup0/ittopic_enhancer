@@ -1,5 +1,6 @@
 """Content validation engine."""
 from typing import List, Optional
+from datetime import datetime
 import logging
 import hashlib
 
@@ -109,6 +110,7 @@ class ValidationEngine:
         )
 
         result = ValidationResult(
+            id=f"validation-{topic.id}-{int(datetime.now().timestamp())}",
             topic_id=topic.id,
             overall_score=overall_score,
             gaps=gaps,

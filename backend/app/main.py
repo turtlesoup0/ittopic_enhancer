@@ -14,9 +14,28 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.api import api_router
-from app.core.config import get_settings
+from app.core.env_config import get_settings
 from app.core.logging import get_logger
+from app.core.middleware import RequestContextMiddleware
 from app.db.session import init_db, close_db, get_db
+
+
+def mask_api_key(api_key: str, visible_chars: int = 4) -> str:
+    """
+    API 키를 안전하게 마스킹합니다.
+
+    Args:
+        api_key: 마스킹할 API 키
+        visible_chars: 표시할 앞부분 문자 수 (기본값: 4)
+
+    Returns:
+        마스킹된 API 키 (예: "abcd****")
+    """
+    if not api_key:
+        return "***"
+    if len(api_key) <= visible_chars:
+        return "***"
+    return f"{api_key[:visible_chars]}{'*' * (len(api_key) - visible_chars)}"
 
 settings = get_settings()
 logger = get_logger(__name__)
@@ -150,7 +169,7 @@ async def rate_limit_middleware(request: Request, call_next):
         retry_after = rate_limiter.get_retry_after(api_key)
         logger.warning(
             "rate_limit_exceeded",
-            api_key=api_key[:8] + "...",
+            api_key=mask_api_key(api_key),
             path=request.url.path,
             retry_after=retry_after,
         )
@@ -212,6 +231,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Request ID middleware (가장 먼저 적용)
+app.add_middleware(RequestContextMiddleware)
 
 # Security middleware (order matters - these must be before route handlers)
 app.middleware("http")(api_key_middleware)

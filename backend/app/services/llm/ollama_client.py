@@ -4,10 +4,15 @@ from typing import Optional, Dict, Any
 import logging
 import hashlib
 
-from app.core.config import get_settings
+from app.core.env_config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+# Ollama는 실제 API 키가 필요하지 않지만,
+# OpenAI 클라이언트가 API 키를 요구하므로 상수로 정의합니다.
+# 이 값은 인증용이 아니며, Ollama 서비스에서 무시됩니다.
+OLLAMA_API_KEY_PLACEHOLDER = "ollama"
 
 
 class OllamaClient:
@@ -25,12 +30,17 @@ class OllamaClient:
         self.model = model or settings.ollama_model
 
         # Ollama provides OpenAI-compatible API
+        # 실제 인증용이 아니므로 상수 값을 사용합니다
         self.client = AsyncOpenAI(
             base_url=f"{self.base_url}/v1",
-            api_key="ollama",  # Ollama doesn't require real API key
+            api_key=OLLAMA_API_KEY_PLACEHOLDER,
         )
 
-        logger.info(f"Ollama client initialized: {self.base_url}, model={self.model}")
+        logger.info(
+            "ollama_client_initialized",
+            base_url=self.base_url,
+            model=self.model
+        )
 
     async def generate_completion(
         self,

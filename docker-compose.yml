@@ -1,5 +1,10 @@
 # Docker Compose configuration for ITPE Topic Enhancement Staging Environment
 # PostgreSQL + Redis + Backend + Frontend services
+#
+# 보안 경고:
+# - 필수 환경변수(.env 파일)를 설정하지 않으면 컨테이너가 시작되지 않습니다
+# - 절대 .env 파일을 버전 관리 시스템에 커밋하지 마세요
+# - 모든 비밀번호는 32자 이상의 강력한 값을 사용하세요
 
 services:
   # PostgreSQL Database Service
@@ -8,9 +13,9 @@ services:
     container_name: itpe-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-itpe}
-      POSTGRES_USER: ${POSTGRES_USER:-itpe}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is not set in .env file}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is not set in .env file}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is not set in .env file}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -29,7 +34,7 @@ services:
     image: redis:7-alpine
     container_name: itpe-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is not set in .env file}
     volumes:
       - redis_data:/data
     ports:
@@ -56,15 +61,15 @@ services:
       DEBUG: ${DEBUG:-false}
 
       # Database (PostgreSQL)
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-itpe}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-itpe}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
 
       # Redis
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-redis_password}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?}@redis:6379/0
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?}
 
       # Celery
-      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
-      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/1
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:?}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:?}@redis:6379/1
 
       # CORS
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:5173,http://frontend:3000}
@@ -131,10 +136,10 @@ services:
     restart: unless-stopped
     command: celery -A app.services.llm.worker worker --loglevel=info --concurrency=2
     environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-itpe}:${POSTGRES_PASSWORD:-change_me_in_production}@postgres:5432/${POSTGRES_DB:-itpe}
-      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
-      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/0
-      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-redis_password}@redis:6379/1
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:?}:${POSTGRES_PASSWORD:?}@postgres:5432/${POSTGRES_DB:?}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:?}@redis:6379/0
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:?}@redis:6379/1
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
     volumes:

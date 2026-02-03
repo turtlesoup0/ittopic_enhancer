@@ -1,6 +1,42 @@
 """Error categories and exception hierarchy for resilience."""
 from typing import Any, Optional
 from enum import Enum
+from datetime import datetime
+from pydantic import BaseModel, Field
+
+
+class ErrorCode(str, Enum):
+    """표준 API 에러 코드."""
+
+    # Validation errors (1xx)
+    VALIDATION_ERROR = "VALIDATION_001"
+    INVALID_INPUT = "VALIDATION_002"
+    MISSING_REQUIRED_FIELD = "VALIDATION_003"
+
+    # Not found errors (2xx)
+    NOT_FOUND = "NOT_FOUND_002"
+    RESOURCE_NOT_FOUND = "NOT_FOUND_003"
+
+    # Authentication errors (3xx)
+    AUTH_FAILED = "AUTH_003"
+    UNAUTHORIZED = "AUTH_004"
+    INVALID_API_KEY = "AUTH_005"
+
+    # Rate limiting errors (4xx)
+    RATE_LIMIT_EXCEEDED = "RATE_LIMIT_004"
+
+    # Internal errors (5xx)
+    INTERNAL_ERROR = "INTERNAL_005"
+    DATABASE_ERROR = "INTERNAL_006"
+    SERVICE_UNAVAILABLE = "INTERNAL_007"
+
+
+class ErrorResponse(BaseModel):
+    """표준 에러 응답 모델."""
+
+    code: ErrorCode = Field(..., description="에러 코드")
+    message: str = Field(..., description="에러 메시지")
+    details: dict[str, Any] = Field(default_factory=dict, description="추가 에러 상세 정보")
 
 
 class ErrorCategory(Enum):

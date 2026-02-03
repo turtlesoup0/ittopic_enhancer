@@ -1,5 +1,6 @@
 """Resilience patterns: Circuit Breaker and Retry decorators."""
 import asyncio
+import threading
 import time
 from typing import Any, Callable, Optional, TypeVar
 from functools import wraps
@@ -53,7 +54,7 @@ class CircuitBreaker:
         self._failure_count = 0
         self._last_failure_time: Optional[float] = None
         self._state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
-        self._lock = asyncio.Lock()
+        self._lock = threading.Lock()
 
     @property
     def state(self) -> str:

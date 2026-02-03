@@ -54,10 +54,13 @@ def log_error(
 
     # 원본 에러가 있으면 스택 트레이스 로그
     if error.original_error:
+        # Remove error_type from error_dict to avoid duplicate keyword argument
+        exception_dict = error_dict.copy()
+        exception_dict.pop("error_type", None)
         logger.exception(
             "error_original_exception",
             error_type=type(error.original_error).__name__,
-            **error_dict,
+            **exception_dict,
         )
 
 

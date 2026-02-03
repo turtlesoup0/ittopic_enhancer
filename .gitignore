@@ -107,17 +107,16 @@ logs/
 # ===========================================
 # Secrets and Credentials (CRITICAL)
 # ===========================================
-# Environment files
+# Environment files - 모든 실제 환경파일 무시
 .env
 .env.local
 .env.*.local
-# Keep example files
-!.env.example
-!.env.*.example
-!.env.development
-# But ignore production and staging actual configs
+.env.development
 .env.production
 .env.staging
+# Keep example files only
+!.env.example
+!.env.*.example
 
 # Certificate files
 *.pem
