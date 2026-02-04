@@ -9,6 +9,102 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### P0 우선순위 버그 수정 (SPEC-FIX-P0)
+
+SPEC-REVIEW-001에서 식별된 3개의 P0 우선순위 이슈를 해결하여 시스템의 핵심 기능을 완성했습니다.
+
+**P0-KEYWORD: 실제 키워드 추출 구현**
+
+키워드 제안 엔드포인트가 placeholder 텍스트 대신 실제 데이터 소스에서 키워드를 추출합니다.
+
+**주요 변경사항:**
+- **KeywordExtractor 서비스**: `app/services/matching/keyword_extractor.py` - 복합어 보존, 동의어 확장, 불용어 필터링
+- **키워드 제안 API**: `app/api/v1/endpoints/keywords.py` - `GET /api/v1/keywords/suggest`
+- **데이터 소스 통합**: 600제, 서브노트에서 텍스트 수집 및 추출
+- **도메인 필터링**: SW, NW, DB, 정보보안, 신기술, 경영, 기타 도메인별 키워드 추출 지원
+
+**API 사용 예시:**
+```bash
+# 모든 도메인 상위 10개 키워드
+GET /api/v1/keywords/suggest
+
+# SW 도메인 상위 20개 키워드
+GET /api/v1/keywords/suggest?domain=SW&top_k=20
+```
+
+**영향을 받는 파일:**
+- `backend/app/api/v1/endpoints/keywords.py` - 키워드 제안 엔드포인트
+- `backend/app/services/matching/keyword_extractor.py` - 키워드 추출 서비스
+- `backend/config/synonyms.yaml` - 동의어 매핑
+- `backend/config/stopwords.yaml` - 불용어 설정
+
+**P0-LLM: LLM 파이프라인 연동**
+
+LLM 파이프라인이 실제로 호출되도록 구현하여 Validation Engine에서 LLM 기반 검증을 수행합니다.
+
+**주요 변경사항:**
+- **OpenAI Client**: `app/services/llm/openai.py` - OpenAI API 클라이언트 구현
+- **LLM 통합**: Validation Engine에 LLM 호출 연결
+- **캐싱 메커니즘**: LLM 응답 24시간 캐싱으로 비용 절감
+- **Fallback 지원**: LLM 호출 실패 시 rule-based 검증으로 graceful degradation
+
+**환경 설정 (`.env`):**
+```bash
+# LLM 제공자 선택 (openai 또는 ollama)
+LLM_PROVIDER=openai
+
+# OpenAI 설정
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o
+
+# Ollama 설정
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
+
+# LLM 파라미터
+LLM_TEMPERATURE=0.3
+LLM_MAX_TOKENS=1000
+```
+
+**영향을 받는 파일:**
+- `backend/app/services/llm/openai.py` - OpenAI 클라이언트
+- `backend/app/core/env_config.py` - LLM 설정 추가
+- `backend/app/services/validation/engine.py` - LLM 통합 (기존 파일 수정)
+
+**P0-METRICS: 메트릭 수집 통합**
+
+메트릭 모듈을 API와 통합하여 모든 요청의 성능 메트릭을 자동으로 수집합니다.
+
+**주요 변경사항:**
+- **MetricsMiddleware**: `app/core/middleware.py` - 모든 API 요청의 응답 시간과 성공/실패 자동 수집
+- **메트릭 요약 엔드포인트**: `app/api/v1/endpoints/metrics.py` - `GET /api/v1/metrics/summary`
+- **미들웨어 등록**: `app/main.py`에 MetricsMiddleware 등록
+
+**메트릭 카테고리:**
+- **keyword_relevance**: 키워드 관련성 (Precision, Recall, F1)
+- **reference_discovery**: 참조 문서 발견율, 커버리지율, 유사도
+- **validation_accuracy**: 검증 정확도
+- **system_performance**: API 응답 시간, 성공률
+
+**API 사용 예시:**
+```bash
+# 모든 메트릭 요약 조회
+GET /api/v1/metrics/summary
+```
+
+**영향을 받는 파일:**
+- `backend/app/core/middleware.py` - MetricsMiddleware 추가
+- `backend/app/api/v1/endpoints/metrics.py` - 메트릭 요약 엔드포인트
+- `backend/app/main.py` - 미들웨어 등록
+
+**Breaking Changes:**
+- 없음 (새로운 기능 추가)
+
+**참고:**
+- 자세한 내용은 `.moai/specs/SPEC-FIX-P0/`을 참조하세요
+
+#### Celery 비동기 검증 시스템 (SPEC-CELERY-001)
+
 #### Celery 비동기 검증 시스템 (SPEC-CELERY-001)
 
 백그라운드 검증 작업 처리를 위해 Celery 기반 비동기 시스템을 도입했습니다.

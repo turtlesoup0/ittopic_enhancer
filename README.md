@@ -167,12 +167,32 @@ Web UI에서 검증 결과 확인 및 제안 적용:
 
 ### Recent Updates
 
+**2026-02-04**: P0 우선순위 버그 수정 (SPEC-FIX-P0)
+
+- **P0-KEYWORD**: 키워드 제안 엔드포인트가 실제 데이터 소스에서 키워드 추출
+  - `GET /api/v1/keywords/suggest?domain=SW&top_k=10`
+  - 데이터 소스: 600제, 서브노트
+  - 복합어 보존, 동의어 확장, 불용어 필터링 지원
+
+- **P0-LLM**: LLM 파이프라인 실제 연동
+  - OpenAI Client 구현 (`app/services/llm/openai.py`)
+  - Validation Engine에 LLM 통합
+  - 캐싱 (24시간 TTL) 및 fallback 메커니즘
+  - 환경 설정: `llm_provider`, `openai_model`, `ollama_model`
+
+- **P0-METRICS**: 메트릭 수집 시스템 통합
+  - MetricsMiddleware 구현 (자동 성능 수집)
+  - `GET /api/v1/metrics/summary` 엔드포인트
+  - 키워드 관련성, 참조 발견율, 검증 정확도, 시스템 성능 메트릭
+
+자세한 내용: [CHANGELOG.md](CHANGELOG.md), [SPEC-FIX-P0](.moai/specs/SPEC-FIX-P0/spec.md)
+
 **2026-02-04**: 백그라운드 검증 작업 트랜잭션 커밋 문제 수정 (SPEC-FIX-001)
 
 - 문제: 백그라운드 검증 작업이 완료되지만 데이터베이스에 결과가 저장되지 않음
 - 수정: `async_session()` 사용 시 명시적 `await db.commit()` 추가
 - 영향: 검증 결과가 올바르게 데이터베이스에 저장됨
-- 자세한 내용: [CHANGELOG.md](CHANGELOG.md), [SPEC-FIX-001](.moai/specs/SPEC-FIX-001/spec.md)
+- 자세한 내용: [SPEC-FIX-001](.moai/specs/SPEC-FIX-001/spec.md)
 
 ## Configuration
 

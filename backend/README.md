@@ -35,6 +35,116 @@ When running in debug mode, visit:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
+### New Endpoints (SPEC-FIX-P0)
+
+#### Keywords API
+
+**GET /api/v1/keywords/suggest**
+
+데이터 소스에서 실제 키워드를 추출하여 추천합니다.
+
+**Parameters:**
+- `domain` (optional): 필터링할 도메인 (SW, NW, DB, 정보보안, 신기술, 경영, 기타)
+- `top_k` (optional): 반환할 키워드 수 (기본값: 10, 최대: 50)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "keywords": ["REST API", "TCP/IP", "데이터베이스", ...],
+    "count": 10
+  }
+}
+```
+
+**Examples:**
+```bash
+# 모든 도메인 상위 10개 키워드
+curl "http://localhost:8000/api/v1/keywords/suggest"
+
+# SW 도메인 상위 20개 키워드
+curl "http://localhost:8000/api/v1/keywords/suggest?domain=SW&top_k=20"
+```
+
+**Features:**
+- 복합어 보존 (TCP/IP, REST API 등 분리 방지)
+- 동의어 확장
+- 불용어 필터링
+- 데이터 소스: 600제, 서브노트
+
+#### Metrics API
+
+**GET /api/v1/metrics/summary**
+
+모든 메트릭 요약을 반환합니다.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "keyword_relevance": {
+      "precision": 0.85,
+      "recall": 0.78,
+      "f1_score": 0.81
+    },
+    "reference_discovery": {
+      "discovery_rate": 0.92,
+      "coverage_rate": 0.88,
+      "avg_similarity": 0.75
+    },
+    "validation_accuracy": {
+      "accuracy": 0.83,
+      "total_validations": 150
+    },
+    "system_performance": {
+      "avg_response_time_ms": 245,
+      "success_rate": 0.98,
+      "total_requests": 500
+    }
+  }
+}
+```
+
+**Example:**
+```bash
+curl "http://localhost:8000/api/v1/metrics/summary"
+```
+
+**Metric Categories:**
+- `keyword_relevance`: 키워드 관련성 메트릭
+- `reference_discovery`: 참조 문서 발견 메트릭
+- `validation_accuracy`: 검증 정확도 메트릭
+- `system_performance`: 시스템 성능 메트릭
+
+### LLM Configuration
+
+**환경변수 설정 (`.env`):**
+
+```bash
+# LLM 제공자 선택
+LLM_PROVIDER=openai  # openai 또는 ollama
+
+# OpenAI 설정
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o
+
+# Ollama 설정
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
+
+# LLM 파라미터
+LLM_TEMPERATURE=0.3
+LLM_MAX_TOKENS=1000
+```
+
+**Features:**
+- OpenAI 및 Ollama 지원
+- 24시간 LLM 응답 캐싱
+- LLM 호출 실패 시 fallback 메커니즘
+- JSON 형식 응답 지원
+
 ## Testing
 
 ```bash
