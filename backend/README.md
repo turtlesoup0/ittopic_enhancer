@@ -203,9 +203,54 @@ LLM_MAX_TOKENS=1000
 
 ## Testing
 
+### Running Tests
+
 ```bash
-pytest
-pytest --cov=app --cov-report=html
+# 테스트 실행 (권장 방식 - uv로 가상 환경 자동 활성화)
+uv run pytest
+
+# 테스트 실행 + 커버리지 리포트
+uv run pytest --cov=app --cov-report=html
+
+# 특정 테스트 파일 실행
+uv run pytest tests/unit/test_metrics_collector.py
+
+# 상세 출력으로 실행
+uv run pytest -v
+
+# 실패한 테스트만 실행
+uv run pytest --lf
+```
+
+### Test Coverage
+
+**SPEC-REVIEW-002 완료 후 테스트 상태 (2026-02-04):**
+
+- **新增 단위 테스트**: 55개
+- **테스트 통과율**: 100% (55/55)
+- **주요 개선 사항**:
+  - Mock 구조 수정으로 안정적인 테스트 실행
+  - Metrics 관련 15개 테스트 추가
+  - OpenAI 클라이언트 22개 테스트 추가
+  - Ollama 클라이언트 18개 테스트 추가
+
+**테스트 파일 목록:**
+```
+tests/unit/
+├── test_metrics_collector.py    # 15개 테스트 (모두 통과)
+├── test_openai_client.py        # 22개 테스트 (모두 통과)
+└── test_ollama_client.py        # 18개 테스트 (모두 통과)
+```
+
+### Test Structure
+
+```bash
+# 전체 테스트 구조
+tests/
+├── integration/     # 통합 테스트 (엔드포인트, 워크플로우)
+├── services/        # 서비스 계층 테스트
+├── unit/            # 단위 테스트 (개별 클래스/함수)
+└── conftest.py      # pytest 설정 및 픽스처
 ```
 
 ## Background Task Transaction Management

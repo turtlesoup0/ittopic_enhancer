@@ -167,6 +167,33 @@ Web UI에서 검증 결과 확인 및 제안 적용:
 
 ### Recent Updates
 
+**2026-02-04**: SPEC-REVIEW-002 P0/P1 완료 - 단위 테스트 55개 추가 및 Mock 구조 수정
+
+SPEC-REVIEW-002에서 식별된 P0 Blocker와 P1 High Priority 이슈를 모두 해결했습니다.
+
+**P0 Blockers 완료:**
+
+- **TD-001**: 테스트 환경 수정 - `uv run pytest` 사용으로 가상 환경 자동 활성화
+- **IF-002**: LLM 검증 통합 - `OllamaClient.validate_content()` 메서드 추가
+
+**P1 High Priority 완료:**
+
+- **P1-1**: Metrics API 엔드포인트 - 이미 구현됨 확인
+- **P1-2**: Proposal Generator - 이미 구현됨 확인
+- **P1-3**: 테스트 커버리지 개선 - 55개 단위 테스트 추가 (모두 통과)
+
+**추가된 테스트 파일:**
+- `tests/unit/test_metrics_collector.py` (15개 테스트)
+- `tests/unit/test_openai_client.py` (22개 테스트)
+- `tests/unit/test_ollama_client.py` (18개 테스트)
+
+**테스트 결과:**
+- 총 55개 새로운 단위 테스트 추가
+- 모든 테스트 통과 (100%)
+- Mock 구조 수정으로 안정적인 테스트 실행 보장
+
+자세한 내용: [CHANGELOG.md](CHANGELOG.md), [SPEC-REVIEW-002](.moai/specs/SPEC-REVIEW-002/spec.md)
+
 **2026-02-04**: 토픽 레벨 의미적 유사도 기반 키워드 추출 (SPEC-KEYWORD-SIM-001)
 
 **문제점 해결:** 기존 도메인 레벨 키워드 추출이 너무 광범위하여 모든 SW 주제가 동일한 키워드를 반환했습니다. 예를 들어 "객체지향" 관련 주제가 "SW 품질" 관련 키워드를 받았습니다.

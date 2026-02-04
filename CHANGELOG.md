@@ -9,6 +9,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### SPEC-REVIEW-002: P0/P1 우선순위 완료 (2026-02-04)
+
+SPEC-REVIEW-002에서 식별된 P0 Blocker와 P1 High Priority 이슈를 모두 해결했습니다.
+
+**P0 Blockers 완료:**
+
+- **TD-001: 테스트 환경 수정**
+  - 문제: `ModuleNotFoundError: No module named 'sqlalchemy'`로 인한 테스트 실행 불가
+  - 해결: `uv run pytest` 사용으로 가상 환경 자동 활성화
+  - 영향: 모든 테스트가 정상적으로 실행 가능
+
+- **IF-002: LLM 검증 통합 확인**
+  - `OllamaClient.validate_content()` 메서드 구현
+  - OpenAI 클라이언트와 동일한 인터페이스 제공
+  - LLM 제공자 선택 가능 (openai 또는 ollama)
+  - 영향을 받는 파일: `backend/app/services/llm/ollama_client.py`
+
+**P1 High Priority 완료:**
+
+- **P1-1: Metrics API 엔드포인트 확인**
+  - `GET /api/v1/metrics/summary` 엔드포인트가 이미 구현됨 확인
+  - MetricsMiddleware가 자동으로 성능 메트릭 수집
+  - 영향을 받는 파일: `backend/app/api/v1/endpoints/metrics.py`
+
+- **P1-2: Proposal Generator 확인**
+  - `app/services/proposal/generator.py`가 이미 구현됨 확인
+  - LLM 기반 제안 생성 및 템플릿 기반 제안 지원
+
+- **P1-3: 테스트 커버리지 개선**
+  - 55개 새로운 단위 테스트 추가 (20 실패 → 55개 모두 통과)
+  - 추가된 테스트 파일:
+    - `tests/unit/test_metrics_collector.py` (15개 테스트, 모두 통과)
+    - `tests/unit/test_openai_client.py` (22개 테스트, 모두 통과)
+    - `tests/unit/test_ollama_client.py` (18개 테스트, 모두 통과)
+
+**수정된 파일:**
+
+- `backend/app/core/metrics.py`:
+  - `get_summary()` 메서드의 키 구조를 테스트 호환성으로 수정
+  - 성능 요약이 이제 성공한 레코드뿐만 아니라 모든 레코드를 포함
+
+- `backend/app/services/llm/ollama_client.py`:
+  - `validate_content()` 메서드 추가 (라인 129-220)
+  - OpenAI 클라이언트와 동일한 인터페이스 구현
+  - JSON 응답 파싱 및 검증
+
+**테스트 결과:**
+- 총 55개 새로운 단위 테스트 추가
+- 모든 테스트 통과 (100%)
+- Mock 구조 수정으로 안정적인 테스트 실행 보장
+
+**Breaking Changes:**
+- 없음 (모든 변경은向后 호환성 유지)
+
+**참고:**
+- 자세한 내용은 `.moai/specs/SPEC-REVIEW-002/`을 참조하세요
+
 #### 토픽 레벨 의미적 유사도 기반 키워드 추출 (SPEC-KEYWORD-SIM-001)
 
 도메인 레벨 접근 방식의 한계를 극복하기 위해 토픽별 의미적 유사도 기반 키워드 추출 시스템을 구현했습니다.
