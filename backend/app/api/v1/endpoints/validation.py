@@ -28,6 +28,30 @@ logger = get_logger(__name__)
 router = APIRouter()
 
 
+def _run_async_task(coro):
+    """Run async task in a new event loop (for BackgroundTasks)."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        return loop.run_until_complete(coro)
+    finally:
+        loop.close()
+
+
+def _process_validation_wrapper(
+    task_id: str,
+    topic_ids: List[str],
+    domain_filter: str | None,
+):
+    """Synchronous wrapper for async validation task."""
+    logger.info("validation_background_task_starting", task_id=task_id, topic_ids=topic_ids)
+    try:
+        _run_async_task(_process_validation(task_id, topic_ids, domain_filter))
+        logger.info("validation_background_task_completed", task_id=task_id)
+    except Exception as e:
+        logger.error("validation_background_task_failed", task_id=task_id, error=str(e), exc_info=True)
+
+
 @router.post("/", response_model=ApiResponse)
 async def create_validation(
     request: ValidationRequest,
@@ -53,7 +77,7 @@ async def create_validation(
 
         # Start background task
         background_tasks.add_task(
-            _process_validation,
+            _process_validation_wrapper,
             task_id,
             request.topic_ids,
             request.domain_filter,
@@ -247,7 +271,15 @@ async def _process_validation(
     topic_ids: List[str],
     domain_filter: str | None,
 ):
-    """Background task to process validation."""
+    """
+    Background task to process validation.
+
+    Transaction Management:
+    - This function uses async_session() which does NOT auto-commit
+    - Explicit commits are required to persist changes to database
+    - Success path: Commits validation results and "completed" status
+    - Error path: Opens new session to persist "failed" status with error message
+    """
     from app.db.session import async_session
 
     try:
@@ -297,10 +329,18 @@ async def _process_validation(
             # Mark as completed
             await task_repo.update_status(task_id, "completed", progress=100)
 
+            # CRITICAL: Explicit commit to persist all changes
+            # Without this, all changes are rolled back when session closes
+            await db.commit()
+
             logger.info("validation_completed", task_id=task_id)
 
     except Exception as e:
-        logger.error("validation_failed", task_id=task_id, error=str(e))
+        logger.error("validation_failed", task_id=task_id, error=str(e), exc_info=True)
+        # Open new session for error status update
+        # Original session may be in invalid state due to exception
         async with async_session() as db:
             task_repo = ValidationTaskRepository(db)
             await task_repo.update_status(task_id, "failed", error=str(e))
+            # CRITICAL: Explicit commit to persist failed status
+            await db.commit()
