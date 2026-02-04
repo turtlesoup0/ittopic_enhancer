@@ -35,6 +35,62 @@ When running in debug mode, visit:
 - Swagger UI: http://localhost:8000/docs
 - ReDoc: http://localhost:8000/redoc
 
+### New Endpoints
+
+#### 토픽별 의미적 키워드 추천 (SPEC-KEYWORD-SIM-001)
+
+**POST /api/v1/keywords/suggest-by-topic**
+
+토픽의 콘텐츠를 분석하여 의미적으로 관련된 키워드를 추천합니다.
+
+**요청 본문:**
+```json
+{
+  "topic_id": "abc-123",
+  "top_k": 5,
+  "similarity_threshold": 0.7
+}
+```
+
+**Parameters:**
+- `topic_id` (필수): 주제 ID
+- `top_k` (선택, 기본값: 5): 반환할 키워드 수 (1-20)
+- `similarity_threshold` (선택, 기본값: 0.7): 유사성 임계값 (0.0-1.0)
+
+**응답 본문:**
+```json
+{
+  "success": true,
+  "data": {
+    "topic_id": "abc-123",
+    "keywords": [
+      {"keyword": "캡슐화", "similarity": 0.92, "source": "600제_SW_120회"},
+      {"keyword": "상속", "similarity": 0.89, "source": "서브노트_SW_OOP"},
+      {"keyword": "다형성", "similarity": 0.87, "source": "600제_SW_125회"}
+    ],
+    "count": 3
+  }
+}
+```
+
+**Features:**
+- 토픽 콘텐츠(정의, 리드문, 키워드) 기반 의미적 유사도 계산
+- 코사인 유사도 기반 매칭
+- 유사도 임계값 필터링
+- 키워드 임베딩 캐싱으로 성능 최적화
+
+**Before/After 비교:**
+```
+# 이전 (도메인 레벨)
+GET /api/v1/keywords/suggest?domain=SW
+["REST API", "TCP/IP", "데이터베이스", "알고리즘", ...]
+
+# 이후 (토픽 레벨)
+POST /api/v1/keywords/suggest-by-topic
+{"topic_id": "oop-001", ...}
+["캡슐화", "상속", "다형성", "추상화", "인터페이스"]
+```
+
 ### New Endpoints (SPEC-FIX-P0)
 
 #### Keywords API

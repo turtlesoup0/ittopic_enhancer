@@ -9,6 +9,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### 토픽 레벨 의미적 유사도 기반 키워드 추출 (SPEC-KEYWORD-SIM-001)
+
+도메인 레벨 접근 방식의 한계를 극복하기 위해 토픽별 의미적 유사도 기반 키워드 추출 시스템을 구현했습니다.
+
+**문제점:**
+- 모든 SW 주제가 동일한 키워드 세트를 반환
+- "객체지향" 주제가 "SW 품질" 관련 키워드를 수신
+- 토픽 콘텐츠와 키워드 간의 의미적 관련성 부족
+
+**해결 방안:**
+
+- **SemanticKeywordService**: 토픽 콘텐츠(정의, 리드문, 키워드)를 기반으로 의미적 유사도 계산
+- **KeywordEmbeddingRepository**: 키워드 임베딩 인메모리 캐시로 빠른 유사도 검색
+- **KeywordMatch**: 키워드, 유사도 점수, 출처를 포함한 매칭 결과
+
+**주요 변경사항:**
+- `app/services/keywords/similarity_extractor.py` - 의미적 키워드 추출 서비스
+- `app/services/keywords/__init__.py` - 서비스 모듈 초기화
+- `app/api/v1/endpoints/keywords.py` - `POST /api/v1/keywords/suggest-by-topic` 엔드포인트
+
+**API 사용 예시:**
+```bash
+# 토픽별 의미적 키워드 추천
+POST /api/v1/keywords/suggest-by-topic
+Content-Type: application/json
+
+{
+  "topic_id": "abc-123",
+  "top_k": 5,
+  "similarity_threshold": 0.7
+}
+```
+
+**응답 예시:**
+```json
+{
+  "success": true,
+  "data": {
+    "topic_id": "abc-123",
+    "keywords": [
+      {"keyword": "캡슐화", "similarity": 0.92, "source": "600제_SW_120회"},
+      {"keyword": "상속", "similarity": 0.89, "source": "서브노트_SW_OOP"},
+      {"keyword": "다형성", "similarity": 0.87, "source": "600제_SW_125회"}
+    ],
+    "count": 3
+  }
+}
+```
+
+**테스트:**
+- `tests/unit/test_similarity_extractor.py` - 단위 테스트 (17개)
+- `tests/integration/test_semantic_keywords_api.py` - 통합 테스트 (9개)
+- 총 157/157 테스트 통과
+
+**주요 특징:**
+- 코사인 유사도 기반 매칭
+- 유사도 임계값 필터링 (기본값: 0.7)
+- 키워드 임베딩 사전 계산으로 성능 최적화
+- 기존 도메인 레벨 API와 호환 유지
+
+**Breaking Changes:**
+- 없음 (새로운 API 추가)
+
+**참고:**
+- 자세한 내용은 `.moai/specs/SPEC-KEYWORD-SIM-001/`을 참조하세요
+
 #### P0 우선순위 버그 수정 (SPEC-FIX-P0)
 
 SPEC-REVIEW-001에서 식별된 3개의 P0 우선순위 이슈를 해결하여 시스템의 핵심 기능을 완성했습니다.

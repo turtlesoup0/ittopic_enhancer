@@ -167,6 +167,41 @@ Web UI에서 검증 결과 확인 및 제안 적용:
 
 ### Recent Updates
 
+**2026-02-04**: 토픽 레벨 의미적 유사도 기반 키워드 추출 (SPEC-KEYWORD-SIM-001)
+
+**문제점 해결:** 기존 도메인 레벨 키워드 추출이 너무 광범위하여 모든 SW 주제가 동일한 키워드를 반환했습니다. 예를 들어 "객체지향" 관련 주제가 "SW 품질" 관련 키워드를 받았습니다.
+
+**개선 사항:**
+
+- **토픽별 의미적 키워드 추출**: `POST /api/v1/keywords/suggest-by-topic` API 추가
+  - 주제의 콘텐츠(정의, 리드문, 키워드)를 분석하여 의미적으로 관련된 키워드 추천
+  - 코사인 유사도 기반 매칭 (임계값 필터링 지원)
+  - 데이터 소스: 600제, 서브노트
+
+- **새로운 API 사용 예시:**
+```bash
+curl -X POST http://localhost:8000/api/v1/keywords/suggest-by-topic \
+  -H "Content-Type: application/json" \
+  -d '{
+    "topic_id": "abc-123",
+    "top_k": 5,
+    "similarity_threshold": 0.7
+  }'
+```
+
+- **핵심 컴포넌트:**
+  - `KeywordMatch`: 키워드 매칭 결과 데이터 클래스
+  - `KeywordEmbeddingRepository`: 키워드 임베딩 인메모리 캐시
+  - `SemanticKeywordService`: 토픽 기반 키워드 추천 서비스
+
+- **테스트 커버리지:**
+  - 17개 단위 테스트
+  - 9개 통합 테스트
+  - 기존 131개 테스트 모두 통과
+  - **총 157/157 테스트 통과**
+
+자세한 내용: [CHANGELOG.md](CHANGELOG.md), [SPEC-KEYWORD-SIM-001](.moai/specs/SPEC-KEYWORD-SIM-001/spec.md)
+
 **2026-02-04**: P0 우선순위 버그 수정 (SPEC-FIX-P0)
 
 - **P0-KEYWORD**: 키워드 제안 엔드포인트가 실제 데이터 소스에서 키워드 추출
