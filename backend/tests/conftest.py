@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sess
 from sqlalchemy.pool import StaticPool
 from httpx import AsyncClient
 from app.services.parser.pdf_parser import PDFParser
+from app.services.parser.markdown_parser import MarkdownParser
 from app.core.cache import CacheManager
 from app.db.session import Base
 from app.main import app
@@ -261,6 +262,12 @@ def sample_proposal():
 def pdf_parser():
     """PDFParser 인스턴스 fixture."""
     return PDFParser()
+
+
+@pytest.fixture
+def markdown_parser():
+    """MarkdownParser 인스턴스 fixture."""
+    return MarkdownParser()
 
 
 @pytest.fixture

@@ -58,11 +58,11 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         # 요청 상태에 Request ID 저장 (다른 미들웨어/라우터에서 접근 가능)
         request.state.request_id = request_id
 
-        # 로거에 Request ID 컨텍스트 추가
-        logger = logger.bind(request_id=request_id)
+        # 로거에 Request ID 컨텍스트 추가 (다른 변수명 사용)
+        request_logger = logger.bind(request_id=request_id)
 
         # 요청 로깅
-        logger.info(
+        request_logger.info(
             "request_started",
             method=request.method,
             path=request.url.path,
@@ -77,7 +77,7 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             response.headers[self.header_name] = request_id
 
             # 응답 로깅
-            logger.info(
+            request_logger.info(
                 "request_completed",
                 method=request.method,
                 path=request.url.path,
@@ -87,9 +87,10 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
             return response
 
         except Exception as e:
-            # 에러 로깅
+            # 에러 로깅 (모듈 레벨 logger 사용)
             logger.error(
                 "request_failed",
+                request_id=request_id,
                 method=request.method,
                 path=request.url.path,
                 error=str(e),

@@ -1,5 +1,10 @@
-"""Validation repository for database operations."""
-from sqlalchemy.ext.asyncio import AsyncSession
+"""
+Synchronous validation repository for Celery workers.
+
+This module provides synchronous versions of the validation repository methods
+for use in Celery workers where async database operations are not compatible.
+"""
+from sqlalchemy.orm import Session
 from sqlalchemy import select, update
 from typing import Optional, List
 import json
@@ -10,16 +15,16 @@ from app.db.models.validation_task import ValidationTaskORM
 from app.models.validation import ValidationResult, ValidationTaskStatus
 
 
-class ValidationRepository:
-    """Repository for Validation result database operations."""
+class ValidationRepositorySync:
+    """Synchronous repository for Validation result database operations."""
 
-    def __init__(self, db: AsyncSession) -> None:
+    def __init__(self, db: Session) -> None:
         """Initialize repository with database session."""
         self._db = db
 
-    async def get_by_id(self, validation_id: str) -> Optional[ValidationResult]:
+    def get_by_id(self, validation_id: str) -> Optional[ValidationResult]:
         """Get validation result by ID."""
-        result = await self._db.execute(
+        result = self._db.execute(
             select(ValidationORM).where(ValidationORM.id == validation_id)
         )
         validation_orm = result.scalar_one_or_none()
@@ -27,9 +32,9 @@ class ValidationRepository:
             return None
         return self._orm_to_model(validation_orm)
 
-    async def get_by_topic_id(self, topic_id: str) -> List[ValidationResult]:
+    def get_by_topic_id(self, topic_id: str) -> List[ValidationResult]:
         """Get all validation results for a topic."""
-        result = await self._db.execute(
+        result = self._db.execute(
             select(ValidationORM)
             .where(ValidationORM.topic_id == topic_id)
             .order_by(ValidationORM.created_at.desc())
@@ -37,7 +42,7 @@ class ValidationRepository:
         validations_orm = result.scalars().all()
         return [self._orm_to_model(v) for v in validations_orm]
 
-    async def create(self, validation: ValidationResult) -> ValidationResult:
+    def create(self, validation: ValidationResult) -> ValidationResult:
         """Create new validation result."""
         # Convert Pydantic models to dict, handling datetime serialization
         gaps_data = []
@@ -74,14 +79,14 @@ class ValidationRepository:
             status="completed",
         )
         self._db.add(validation_orm)
-        await self._db.flush()
+        self._db.flush()
         return validation
 
-    async def get_latest_by_topic(
+    def get_latest_by_topic(
         self, topic_id: str
     ) -> Optional[ValidationResult]:
         """Get latest validation result for a topic."""
-        result = await self._db.execute(
+        result = self._db.execute(
             select(ValidationORM)
             .where(ValidationORM.topic_id == topic_id)
             .order_by(ValidationORM.created_at.desc())
@@ -117,16 +122,16 @@ class ValidationRepository:
         )
 
 
-class ValidationTaskRepository:
-    """Repository for Validation Task database operations."""
+class ValidationTaskRepositorySync:
+    """Synchronous repository for Validation Task database operations."""
 
-    def __init__(self, db: AsyncSession) -> None:
+    def __init__(self, db: Session) -> None:
         """Initialize repository with database session."""
         self._db = db
 
-    async def get_by_id(self, task_id: str) -> Optional[ValidationTaskStatus]:
+    def get_by_id(self, task_id: str) -> Optional[ValidationTaskStatus]:
         """Get task by ID."""
-        result = await self._db.execute(
+        result = self._db.execute(
             select(ValidationTaskORM).where(ValidationTaskORM.task_id == task_id)
         )
         task_orm = result.scalar_one_or_none()
@@ -134,7 +139,7 @@ class ValidationTaskRepository:
             return None
         return self._orm_to_model(task_orm)
 
-    async def create(
+    def create(
         self,
         task_id: str,
         topic_ids: List[str],
@@ -151,10 +156,10 @@ class ValidationTaskRepository:
             domain_filter=domain_filter,
         )
         self._db.add(task_orm)
-        await self._db.flush()
+        self._db.flush()
         return self._orm_to_model(task_orm)
 
-    async def update_status(
+    def update_status(
         self,
         task_id: str,
         status: str,
@@ -173,7 +178,7 @@ class ValidationTaskRepository:
         if status == "completed":
             update_values["completed_at"] = datetime.now()
 
-        result = await self._db.execute(
+        result = self._db.execute(
             update(ValidationTaskORM)
             .where(ValidationTaskORM.task_id == task_id)
             .values(**update_values)
@@ -183,29 +188,29 @@ class ValidationTaskRepository:
 
         # CRITICAL: Flush the UPDATE statement to database
         # Without flush, the update stays in session queue and commit has nothing to persist
-        await self._db.flush()
+        self._db.flush()
 
         if not task_orm:
             return None
         return self._orm_to_model(task_orm)
 
-    async def add_result(
+    def add_result(
         self, task_id: str, validation: ValidationResult
     ) -> None:
         """Add validation result to task."""
         # Store validation result in validations table
-        validation_repo = ValidationRepository(self._db)
-        await validation_repo.create(validation)
+        validation_repo = ValidationRepositorySync(self._db)
+        validation_repo.create(validation)
 
-    async def get_results(self, task_id: str) -> List[ValidationResult]:
+    def get_results(self, task_id: str) -> List[ValidationResult]:
         """Get all results for a task."""
-        result = await self._db.execute(
+        result = self._db.execute(
             select(ValidationORM)
             .where(ValidationORM.task_id == task_id)
             .order_by(ValidationORM.created_at.desc())
         )
         validations_orm = result.scalars().all()
-        return [ValidationRepository._orm_to_model(v) for v in validations_orm]
+        return [ValidationRepositorySync._orm_to_model(v) for v in validations_orm]
 
     @staticmethod
     def _orm_to_model(task_orm: ValidationTaskORM) -> ValidationTaskStatus:

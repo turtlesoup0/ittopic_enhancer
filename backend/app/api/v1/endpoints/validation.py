@@ -1,9 +1,8 @@
 """Validation API endpoints."""
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 import uuid
-import asyncio
 
 from app.api.deps import get_db, get_current_request_id
 from app.core.api import ApiResponse
@@ -22,47 +21,24 @@ from app.db.repositories.proposal import ProposalRepository
 from app.services.matching.matcher import get_matching_service
 from app.services.validation.engine import get_validation_engine
 from app.services.proposal.generator import get_proposal_generator
+from app.services.llm.worker import process_validation_task
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()
 
 
-def _run_async_task(coro):
-    """Run async task in a new event loop (for BackgroundTasks)."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        return loop.run_until_complete(coro)
-    finally:
-        loop.close()
-
-
-def _process_validation_wrapper(
-    task_id: str,
-    topic_ids: List[str],
-    domain_filter: str | None,
-):
-    """Synchronous wrapper for async validation task."""
-    logger.info("validation_background_task_starting", task_id=task_id, topic_ids=topic_ids)
-    try:
-        _run_async_task(_process_validation(task_id, topic_ids, domain_filter))
-        logger.info("validation_background_task_completed", task_id=task_id)
-    except Exception as e:
-        logger.error("validation_background_task_failed", task_id=task_id, error=str(e), exc_info=True)
-
-
 @router.post("/", response_model=ApiResponse)
 async def create_validation(
     request: ValidationRequest,
-    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     request_id: str = Depends(get_current_request_id),
 ):
     """
     Create a validation task.
 
-    This will start background processing to validate topics against reference documents.
+    This will submit a Celery task for background processing to validate topics
+    against reference documents.
     """
     try:
         task_id = f"validation-{uuid.uuid4()}"
@@ -74,16 +50,21 @@ async def create_validation(
             topic_ids=request.topic_ids,
             domain_filter=request.domain_filter,
         )
+        await db.commit()
 
-        # Start background task
-        background_tasks.add_task(
-            _process_validation_wrapper,
-            task_id,
-            request.topic_ids,
-            request.domain_filter,
+        # Submit Celery task (non-blocking)
+        celery_task = process_validation_task.delay(
+            task_id=task_id,
+            topic_ids=request.topic_ids,
+            domain_filter=request.domain_filter,
         )
 
-        logger.info("validation_created", task_id=task_id, topic_count=len(request.topic_ids))
+        logger.info(
+            "validation_celery_task_submitted",
+            task_id=task_id,
+            celery_task_id=celery_task.id,
+            topic_count=len(request.topic_ids),
+        )
 
         response_data = ValidationResponse(
             task_id=task_id,
@@ -264,83 +245,3 @@ async def generate_proposals_for_task(
             details={"task_id": task_id},
             request_id=request_id,
         )
-
-
-async def _process_validation(
-    task_id: str,
-    topic_ids: List[str],
-    domain_filter: str | None,
-):
-    """
-    Background task to process validation.
-
-    Transaction Management:
-    - This function uses async_session() which does NOT auto-commit
-    - Explicit commits are required to persist changes to database
-    - Success path: Commits validation results and "completed" status
-    - Error path: Opens new session to persist "failed" status with error message
-    """
-    from app.db.session import async_session
-
-    try:
-        async with async_session() as db:
-            task_repo = ValidationTaskRepository(db)
-            validation_repo = ValidationRepository(db)
-            topic_repo = TopicRepository(db)
-
-            # Update status to processing
-            await task_repo.update_status(task_id, "processing")
-
-            matcher = get_matching_service()
-            validator = get_validation_engine()
-
-            for i, topic_id in enumerate(topic_ids):
-                try:
-                    # Fetch topic from database
-                    topic = await topic_repo.get_by_id(topic_id)
-
-                    if not topic:
-                        logger.warning("topic_not_found", topic_id=topic_id)
-                        continue
-
-                    # Find matching references
-                    references = await matcher.find_references(
-                        topic,
-                        top_k=5,
-                        domain_filter=domain_filter,
-                    )
-
-                    # Validate content
-                    validation_result = await validator.validate(topic, references)
-                    await validation_repo.create(validation_result)
-
-                    # Update progress
-                    await task_repo.update_status(
-                        task_id,
-                        "processing",
-                        progress=int((i + 1) / len(topic_ids) * 100),
-                        current=i + 1,
-                    )
-
-                except Exception as e:
-                    logger.error("validation_topic_failed", topic_id=topic_id, error=str(e))
-                    continue
-
-            # Mark as completed
-            await task_repo.update_status(task_id, "completed", progress=100)
-
-            # CRITICAL: Explicit commit to persist all changes
-            # Without this, all changes are rolled back when session closes
-            await db.commit()
-
-            logger.info("validation_completed", task_id=task_id)
-
-    except Exception as e:
-        logger.error("validation_failed", task_id=task_id, error=str(e), exc_info=True)
-        # Open new session for error status update
-        # Original session may be in invalid state due to exception
-        async with async_session() as db:
-            task_repo = ValidationTaskRepository(db)
-            await task_repo.update_status(task_id, "failed", error=str(e))
-            # CRITICAL: Explicit commit to persist failed status
-            await db.commit()

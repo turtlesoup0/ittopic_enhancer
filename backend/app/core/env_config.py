@@ -7,21 +7,19 @@
 - 환경변수 유효성 검사와 기본값을 중앙에서 관리합니다
 """
 
-import os
-from typing import Optional, Union, List
 from functools import lru_cache
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
 from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class EnvConfigError(Exception):
     """필수 환경변수가 누락된 경우 발생하는 에러"""
 
-    def __init__(self, missing_keys: List[str]):
+    def __init__(self, missing_keys: list[str]):
         self.missing_keys = missing_keys
         super().__init__(
-            f"필수 환경변수가 누락되었습니다: {', '.join(missing_keys)}. "
-            f".env 파일을 확인하세요."
+            f"필수 환경변수가 누락되었습니다: {', '.join(missing_keys)}. .env 파일을 확인하세요."
         )
 
 
@@ -44,11 +42,11 @@ class Settings(BaseSettings):
     # API Settings
     # ========================================================================
     api_prefix: str = "/api/v1"
-    cors_origins: Union[List[str], str] = ["http://localhost:3000", "http://localhost:5173"]
+    cors_origins: list[str] | str = ["http://localhost:3000", "http://localhost:5173"]
 
     @field_validator("cors_origins", mode="before")
     @classmethod
-    def parse_cors_origins(cls, v: Union[List[str], str]) -> List[str]:
+    def parse_cors_origins(cls, v: list[str] | str) -> list[str]:
         """CORS origins를 쉼표로 구분된 문자열이나 리스트에서 파싱합니다."""
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
@@ -59,16 +57,20 @@ class Settings(BaseSettings):
     # ========================================================================
     database_url: str = "sqlite+aiosqlite:///./data/itpe-enhancement.db"
 
+    # Sync database URL for Celery workers (uses psycopg2 instead of asyncpg)
+    # Celery workers cannot use async database drivers due to event loop conflicts
+    sync_database_url: str | None = None
+
     # PostgreSQL 환경변수 (Docker Compose에서 사용)
-    postgres_db: Optional[str] = None
-    postgres_user: Optional[str] = None
-    postgres_password: Optional[str] = None
+    postgres_db: str | None = None
+    postgres_user: str | None = None
+    postgres_password: str | None = None
 
     # ========================================================================
     # Redis Settings
     # ========================================================================
     redis_url: str = "redis://localhost:6379/0"
-    redis_password: Optional[str] = None
+    redis_password: str | None = None
 
     # ========================================================================
     # Cache Settings
@@ -141,7 +143,7 @@ class Settings(BaseSettings):
     # LLM Settings
     # ========================================================================
     llm_provider: str = "openai"  # openai or ollama
-    openai_api_key: Optional[str] = None
+    openai_api_key: str | None = None
     openai_model: str = "gpt-4o"
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1:8b"
@@ -162,13 +164,40 @@ class Settings(BaseSettings):
     celery_broker_url: str = "redis://localhost:6379/0"
     celery_result_backend: str = "redis://localhost:6379/1"
 
+    def get_celery_broker_url(self) -> str:
+        """
+        비밀번호가 포함된 Celery broker URL을 반환합니다.
+
+        Returns:
+            비밀번호가 포함된 Redis URL
+        """
+        # URL에 이미 인증(@)이 포함되어 있는지 확인
+        if "@" not in self.celery_broker_url and self.redis_password:
+            # 비밀번호가 없는 경우만 추가
+            return self.celery_broker_url.replace("redis://", f"redis://:{self.redis_password}@")
+        return self.celery_broker_url
+
+    def get_celery_result_backend(self) -> str:
+        """
+        비밀번호가 포함된 Celery result backend URL을 반환합니다.
+
+        Returns:
+            비밀번호가 포함된 Redis URL
+        """
+        # URL에 이미 인증(@)이 포함되어 있는지 확인
+        if "@" not in self.celery_result_backend and self.redis_password:
+            return self.celery_result_backend.replace(
+                "redis://", f"redis://:{self.redis_password}@"
+            )
+        return self.celery_result_backend
+
     # ========================================================================
     # Security Settings
     # ========================================================================
     # API 키 헤더 이름
     api_key_header: str = "X-API-Key"
     # 허용된 API 키 목록 (SHA-256 해시로 저장 권장)
-    api_keys: List[str] = []
+    api_keys: list[str] = []
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -217,6 +246,34 @@ class Settings(BaseSettings):
             # URL에 비밀번호가 없는 경우 추가
             return self.redis_url.replace("redis://", f"redis://:{self.redis_password}@")
         return self.redis_url
+
+    def get_sync_database_url(self) -> str:
+        """
+        Convert async database URL to sync database URL for Celery workers.
+
+        Converts:
+        - postgresql+asyncpg://... → postgresql://...
+        - sqlite+aiosqlite://... → sqlite://...
+
+        Returns:
+            Sync database URL
+        """
+        if self.sync_database_url:
+            return self.sync_database_url
+
+        # Auto-convert from async to sync URL
+        url = self.database_url
+
+        # PostgreSQL asyncpg → psycopg2
+        if "postgresql+asyncpg://" in url:
+            return url.replace("postgresql+asyncpg://", "postgresql://")
+
+        # SQLite aiosqlite → sqlite3 (standard sqlite)
+        if "sqlite+aiosqlite://" in url:
+            return url.replace("sqlite+aiosqlite://", "sqlite://")
+
+        # If no async prefix, return as-is
+        return url
 
 
 @lru_cache

@@ -26,6 +26,8 @@ graph TB
         EMBED[Embedding Service]
         VDB[(Vector DB)]
         LLM[LLM Service]
+        CELERY[Celery Workers]
+        REDIS[(Redis Broker)]
     end
 
     subgraph "Frontend"
@@ -39,9 +41,26 @@ graph TB
     API --> EMBED
     EMBED --> VDB
     API --> LLM
+    API --> CELERY
+    CELERY --> REDIS
     WEB --> API
     PLUGIN --> API
 ```
+
+### Celery Background Task System
+
+이 시스템은 **Celery**를 사용하여 비동기 백그라운드 작업을 처리합니다:
+
+- **비동기 검증 작업**: 대용량 토픽 검증을 백그라운드에서 처리
+- **진행 상황 추적**: 실시간 작업 상태 모니터링
+- **결과 캐싱**: Redis 기반 결과 캐싱으로 성능 최적화
+- **동기/비동기 호환**: Celery worker 내부에서 동기 세션 사용
+
+#### 아키텍처 특징
+
+- **FastAPI + Celery**: REST API와 백그라운드 작업 분리
+- **Redis Broker**: 메시지 브로커 및 결과 백엔드로 사용
+- **Sync Session Pattern**: Celery worker에서 동기 DB 세션 사용으로 트랜잭션 문제 해결
 
 ## Quick Start
 
@@ -143,6 +162,17 @@ Web UI에서 검증 결과 확인 및 제안 적용:
 - **[Technology Stack](TECH_STACK.md)**: 기술 스택 상세
 - **[Project Structure](PROJECT_STRUCTURE.md)**: 프로젝트 구조
 - **[API Documentation](http://localhost:8000/docs)**: OpenAPI/Swagger (실행 중일 때)
+- **[Backend README](backend/README.md)**: 백엔드 설정 및 트랜잭션 관리 가이드
+- **[Background Task Transaction Management](.moai/docs/background-task-transaction-management.md)**: 백그라운드 작업 트랜잭션 관리 패턴
+
+### Recent Updates
+
+**2026-02-04**: 백그라운드 검증 작업 트랜잭션 커밋 문제 수정 (SPEC-FIX-001)
+
+- 문제: 백그라운드 검증 작업이 완료되지만 데이터베이스에 결과가 저장되지 않음
+- 수정: `async_session()` 사용 시 명시적 `await db.commit()` 추가
+- 영향: 검증 결과가 올바르게 데이터베이스에 저장됨
+- 자세한 내용: [CHANGELOG.md](CHANGELOG.md), [SPEC-FIX-001](.moai/specs/SPEC-FIX-001/spec.md)
 
 ## Configuration
 

@@ -1,7 +1,8 @@
 """Database session management."""
 import sqlalchemy
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy import create_engine
 from app.core.config import get_settings
 from typing import AsyncGenerator
 
@@ -32,7 +33,49 @@ engine = create_async_engine(
 async_session = async_sessionmaker(
     engine,
     class_=AsyncSession,
-    expire_on_commit=False,
+    expire_on_commit=True,  # Expire objects after commit to prevent stale data
+)
+
+
+# ============================================================================
+# Sync Session Factory for Celery Workers
+# ============================================================================
+# Celery workers cannot use async database drivers (asyncpg/aiosqlite) due to
+# event loop conflicts. This sync session factory uses psycopg2 for PostgreSQL
+# or standard sqlite3 for SQLite, allowing Celery tasks to run without asyncio
+# event loop issues.
+
+# Get sync database URL (convert async URL to sync if needed)
+sync_database_url = settings.get_sync_database_url()
+
+# Pool settings for sync engine
+sync_pool_kwargs = {}
+if "sqlite" in sync_database_url:
+    # SQLite settings
+    sync_connect_args = {"check_same_thread": False}
+else:
+    # PostgreSQL/other pool settings
+    sync_connect_args = {}
+    sync_pool_kwargs = {
+        "pool_size": 5,
+        "max_overflow": 10,
+        "pool_pre_ping": True,  # Verify connections before using
+    }
+
+# Create sync engine for Celery workers
+sync_engine = create_engine(
+    sync_database_url,
+    echo=settings.debug,
+    connect_args=sync_connect_args,
+    **sync_pool_kwargs,
+)
+
+# Create sync session factory
+SyncSessionLocal = sessionmaker(
+    bind=sync_engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,  # Keep objects alive after commit for Celery workers
 )
 
 

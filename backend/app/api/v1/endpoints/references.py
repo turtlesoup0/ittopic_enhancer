@@ -16,6 +16,7 @@ from app.models.reference import (
     ReferenceSourceType,
 )
 from app.services.parser.pdf_parser import PDFParser
+from app.services.parser.markdown_parser import MarkdownParser
 from app.services.matching.matcher import get_matching_service
 from app.core.config import get_settings
 from app.core.logging import get_logger
@@ -42,7 +43,12 @@ async def index_references(
         start_time = time.time()
 
         matcher = get_matching_service()
-        parser = PDFParser()
+
+        # Parser factory: select parser based on source_type
+        parsers = {
+            ReferenceSourceType.PDF_BOOK: PDFParser(),
+            ReferenceSourceType.MARKDOWN: MarkdownParser(),
+        }
 
         indexed_count = 0
         failed_count = 0
@@ -50,14 +56,20 @@ async def index_references(
 
         for path in request.source_paths:
             try:
-                # Parse document
-                if request.source_type == ReferenceSourceType.PDF_BOOK:
-                    parsed = parser.parse(path)
-                else:
-                    # For now, only PDF is supported
+                # Select appropriate parser
+                parser = parsers.get(request.source_type)
+                if parser is None:
+                    logger.warning(
+                        "unsupported_source_type",
+                        source_type=request.source_type,
+                        path=path,
+                    )
                     failed_count += 1
                     failed_paths.append(path)
                     continue
+
+                # Parse document
+                parsed = parser.parse(path)
 
                 # Create reference document
                 ref = ReferenceDocument(

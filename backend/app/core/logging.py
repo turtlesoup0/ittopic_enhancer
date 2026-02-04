@@ -57,9 +57,12 @@ def log_error(
         # Remove error_type from error_dict to avoid duplicate keyword argument
         exception_dict = error_dict.copy()
         exception_dict.pop("error_type", None)
+
+        # Add error_type separately to avoid conflict
+        exception_dict["error_type"] = type(error.original_error).__name__
+
         logger.exception(
             "error_original_exception",
-            error_type=type(error.original_error).__name__,
             **exception_dict,
         )
 
