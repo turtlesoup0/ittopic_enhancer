@@ -1,41 +1,41 @@
 """Pytest configuration and fixtures."""
-import pytest
+
 import asyncio
+from collections.abc import AsyncGenerator
 from pathlib import Path
-from typing import AsyncGenerator, Generator
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import StaticPool
+
+import pytest
 from httpx import AsyncClient
-from app.services.parser.pdf_parser import PDFParser
-from app.services.parser.markdown_parser import MarkdownParser
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
+
 from app.core.cache import CacheManager
 from app.db.session import Base
 from app.main import app
-from app.core.config import get_settings
+from app.services.parser.markdown_parser import MarkdownParser
+from app.services.parser.pdf_parser import PDFParser
 
 # asyncio mode 설정: 각 테스트가 순차적으로 실행되도록 함
-pytest_plugins = ("pytest_asyncio",)
+# Note: pytest_asyncio is enabled via pytest.ini or setup.cfg
+
 
 def pytest_configure(config):
     """Pytest 설정."""
     import sys
+
     # asyncio event loop policy 설정
     if sys.platform == "darwin" or sys.platform == "linux":
         asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
 
+
 # Import all ORM models to ensure they're registered with Base.metadata
-from app.db.models.topic import TopicORM
-from app.db.models.validation import ValidationORM
-from app.db.models.validation_task import ValidationTaskORM
-from app.db.models.proposal import ProposalORM
-from app.db.models.reference import ReferenceORM
 
 
 # =============================================================================
 # Database Fixtures
 # =============================================================================
 @pytest.fixture(scope="function")
-async def db_session() -> AsyncGenerator[AsyncSession, None]:
+async def db_session() -> AsyncGenerator[AsyncSession]:
     """
     테스트용 DB 세션.
 
@@ -71,7 +71,7 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
 # Cache Fixtures
 # =============================================================================
 @pytest.fixture(scope="function")
-async def cache_manager() -> AsyncGenerator[CacheManager, None]:
+async def cache_manager() -> AsyncGenerator[CacheManager]:
     """
     테스트용 캐시 매니저.
 
@@ -86,7 +86,7 @@ async def cache_manager() -> AsyncGenerator[CacheManager, None]:
 
 
 @pytest.fixture(scope="function")
-async def redis_cache_manager() -> AsyncGenerator[CacheManager, None]:
+async def redis_cache_manager() -> AsyncGenerator[CacheManager]:
     """
     테스트용 Redis 캐시 매니저.
 
@@ -109,12 +109,50 @@ async def redis_cache_manager() -> AsyncGenerator[CacheManager, None]:
 # HTTP Client Fixtures
 # =============================================================================
 @pytest.fixture(scope="function")
-async def async_client() -> AsyncGenerator[AsyncClient, None]:
+async def async_client() -> AsyncGenerator[AsyncClient]:
     """
     테스트용 비동기 HTTP 클라이언트.
     """
     async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
+
+
+@pytest.fixture(scope="function")
+async def clean_client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient]:
+    """
+    Integration 테스트용 비동기 HTTP 클라이언트.
+
+    인메모리 DB를 사용하며, 각 테스트 후 자동으로 정리됩니다.
+    db_session fixture에 의존하여 테스트 격리을 보장합니다.
+    """
+    import uuid
+
+    from httpx import ASGITransport
+
+    # 고유한 API 키 생성 (테스트마다 다른 값)
+    TEST_API_KEY = f"test-api-key-{uuid.uuid4()}"
+
+    # DB 세션 오버라이드 - override the dependency that routes actually use
+    async def override_get_db():
+        yield db_session
+
+    # 의존성 오버라이드 - routes use app.api.deps.get_db
+    from app.api.deps import get_db
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    try:
+        # API 키 헤더와 함께 클라이언트 생성
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            headers={"X-API-Key": TEST_API_KEY},
+        ) as client:
+            yield client
+    finally:
+        # 오버라이드 정리
+        app.dependency_overrides.clear()
+        await db_session.rollback()
 
 
 # =============================================================================
@@ -124,6 +162,7 @@ async def async_client() -> AsyncGenerator[AsyncClient, None]:
 def topic_repo(db_session: AsyncSession):
     """TopicRepository fixture."""
     from app.db.repositories.topic import TopicRepository
+
     return TopicRepository(db_session)
 
 
@@ -131,6 +170,7 @@ def topic_repo(db_session: AsyncSession):
 def validation_repo(db_session: AsyncSession):
     """ValidationRepository fixture."""
     from app.db.repositories.validation import ValidationRepository
+
     return ValidationRepository(db_session)
 
 
@@ -138,6 +178,7 @@ def validation_repo(db_session: AsyncSession):
 def validation_task_repo(db_session: AsyncSession):
     """ValidationTaskRepository fixture."""
     from app.db.repositories.validation import ValidationTaskRepository
+
     return ValidationTaskRepository(db_session)
 
 
@@ -145,6 +186,7 @@ def validation_task_repo(db_session: AsyncSession):
 def reference_repo(db_session: AsyncSession):
     """ReferenceRepository fixture."""
     from app.db.repositories.reference import ReferenceRepository
+
     return ReferenceRepository(db_session)
 
 
@@ -152,6 +194,7 @@ def reference_repo(db_session: AsyncSession):
 def proposal_repo(db_session: AsyncSession):
     """ProposalRepository fixture."""
     from app.db.repositories.proposal import ProposalRepository
+
     return ProposalRepository(db_session)
 
 
@@ -161,7 +204,8 @@ def proposal_repo(db_session: AsyncSession):
 @pytest.fixture
 def sample_topic_create():
     """샘플 TopicCreate fixture."""
-    from app.models.topic import TopicCreate, DomainEnum
+    from app.models.topic import DomainEnum, TopicCreate
+
     return TopicCreate(
         file_path="/test/path/topic1.md",
         file_name="topic1.md",
@@ -180,6 +224,7 @@ def sample_reference_create():
     """샘플 ReferenceCreate fixture."""
     from app.models.reference import ReferenceCreate, ReferenceSourceType
     from app.models.topic import DomainEnum
+
     return ReferenceCreate(
         source_type=ReferenceSourceType.PDF_BOOK,
         title="테스트 참조 문서",
@@ -194,10 +239,11 @@ def sample_reference_create():
 @pytest.fixture
 def sample_validation_result():
     """샘플 ValidationResult fixture."""
-    from app.models.validation import ValidationResult, ContentGap, GapType, MatchedReference
-    from app.models.reference import ReferenceSourceType
-    from datetime import datetime
     import uuid
+    from datetime import datetime
+
+    from app.models.reference import ReferenceSourceType
+    from app.models.validation import ContentGap, GapType, MatchedReference, ValidationResult
 
     return ValidationResult(
         id=str(uuid.uuid4()),
@@ -235,9 +281,10 @@ def sample_validation_result():
 @pytest.fixture
 def sample_proposal():
     """샘플 EnhancementProposal fixture."""
-    from app.models.proposal import EnhancementProposal, ProposalPriority
-    from datetime import datetime
     import uuid
+    from datetime import datetime
+
+    from app.models.proposal import EnhancementProposal, ProposalPriority
 
     return EnhancementProposal(
         id=str(uuid.uuid4()),
@@ -280,7 +327,9 @@ def sample_pdf_path(tmp_path):
 @pytest.fixture
 def fb21_base_path():
     """FB21 수험 서적 기본 경로."""
-    return Path("/Users/turtlesoup0-macmini/Library/CloudStorage/MYBOX-sjco1/공유 폴더/공유받은 폴더/FB21기 수업자료")
+    return Path(
+        "/Users/turtlesoup0-macmini/Library/CloudStorage/MYBOX-sjco1/공유 폴더/공유받은 폴더/FB21기 수업자료"
+    )
 
 
 @pytest.fixture
