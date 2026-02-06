@@ -1,0 +1,10 @@
+{
+  "id": "itpe-topic-enhancement",
+  "name": "ITPE Topic Enhancement",
+  "version": "1.0.0",
+  "minAppVersion": "1.6.0",
+  "description": "ITPE Topic Enhancement System과 동기화하여 토픽 내용을 검증하고 개선 제안을 받습니다.",
+  "author": "turtlesoup0",
+  "authorUrl": "https://github.com/turtlesoup0",
+  "isDesktopOnly": false
+}
